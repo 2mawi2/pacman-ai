@@ -10,11 +10,11 @@ n_states: int = 72
 agent = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
-    discount=0.95,
-    alpha=0.05,
+    discount=0.9,
+    alpha=0.0001,
     epsilon=1,
     epsilon_decay=0.99,
-    lamb=0.5
+    lamb=0.45
 )
 
 
@@ -24,10 +24,11 @@ def get_reward(next_state: State):
         State.DOOR: 0,
         State.STAR: 10,
         State.GHOST: -100,
-        State.POINT: 2,
+        State.POINT: 1,
         State.WALL: -1,
     }
-    return switcher.get(next_state, 0), next_state == State.DOOR
+    game_over = next_state == State.DOOR or next_state == State.GHOST
+    return switcher.get(next_state, 0), game_over
 
 
 def parse_action(action: int) -> Direction:
@@ -65,7 +66,9 @@ def convert_to_one_hot(state_number):
 
 
 success = 0
-episodes = 100
+episodes = 600
+avg_reward = 0
+max_reward = 0
 for e in range(episodes):
     game = Game()
     state = package_state(game.find_pacman_index())
@@ -77,26 +80,31 @@ for e in range(episodes):
         direction = parse_action(action)
 
         field_type, next_index = game.move(direction)
-        game.update_ui()
+        if e > 590:
+            game.update_ui()
         reward, done = get_reward(field_type)
         next_state = package_state(next_index)  # next_index:int -> to vector of weights
         agent.learn(state, action, next_state, reward, greedy)
 
-        if done:
-            print(f'episode: {e}/{episodes}, score: {total_reward:.2f} pacman found the door')
-            success += 1
-            break
-
-            # if e >= episodes - 100:
-            #    success += 1
-            # else:
-            #    print(f"episode: {e}/{episodes}, score: {total_reward:.2f}")
-            # break
-
         state = next_state
         total_reward += reward
+
+        if done:
+            if reward == 0:  # game has been terminated by door
+                print(f"episode: {e}/{episodes}, score: {total_reward:.2f} and goal has been found!")
+                if total_reward > max_reward:
+                    max_reward = total_reward
+
+                if e >= episodes - 100:
+                    success += 1
+                    avg_reward += total_reward
+            else:  # game has been terminated by ghost
+                print(f"episode: {e}/{episodes}, score: {total_reward:.2f}")
+            break
 
     agent.reset_e_trace()
 
 agent.print_weights()
 print(f'RECENT SUCCESS RATE: {success}/{100}')
+print(f'avg reward rate {avg_reward / 100}')
+print(f'max reward rate {max_reward}')
