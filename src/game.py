@@ -1,32 +1,17 @@
-import os
-from enum import Enum
-
-
-class Direction(Enum):
-    RIGHT = 0,
-    LEFT = 1,
-    UP = 2,
-    DOWN = 3,
-
-
-class State(Enum):
-    GHOST = 0,
-    EMPTY = 1,
-    POINT = 2,
-    STAR = 3,
-    WALL = 4,
-    DOOR = 5,
+from src.direction import Direction
+from src.state import State
 
 
 class Game:
-    field = [
-        ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-        ["o", " ", " ", " ", " ", " ", "o", " ", "o", " ", " ", "o"],
-        ["o", " ", "g", "o", "o", " ", "o", " ", "o", "x", " ", "o"],
-        ["o", " ", "o", "o", "p", " ", "o", " ", "o", "o", " ", "o"],
-        ["o", " ", "o", "o", " ", " ", "g", " ", "o", "o", " ", "o"],
-        ["o", "o", "o", "o", "o", "o", "o", " ", "o", "o", " ", "d"],
-    ]
+    def __init__(self) -> None:
+        self.field = [
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", " ", " ", " ", " ", " ", "o", " ", "o", " ", " ", "o"],
+            ["o", " ", "g", "o", "o", " ", "o", " ", "o", "x", " ", "o"],
+            ["o", " ", "o", "o", "p", " ", "o", " ", "o", "o", " ", "o"],
+            ["o", " ", "o", "o", " ", " ", "g", " ", "o", "o", " ", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", " ", "o", "o", " ", "d"],
+        ]
 
     def update_ui(self):
         for line in self.field:
@@ -34,7 +19,7 @@ class Game:
                 print(field + " ", end="")
             print(end="\n")
 
-    def move(self, dir: Direction) -> State:
+    def move(self, dir: Direction) -> (State, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
         state: State = self._get_state(x + delta_x, y + delta_y)
@@ -45,13 +30,22 @@ class Game:
         self.field[y][x] = " "
         self.field[y + delta_y][x + delta_x] = "p"
 
-        return state
+        index = self._get_index(x + delta_x, y + delta_y)
+
+        return state, index
 
     def find_pacman(self) -> (int, int):
         for y, line in enumerate(self.field):
             for x, field in enumerate(line):
                 if field is "p":
                     return x, y
+
+    def find_pacman_index(self) -> (int, int):
+        x, y = self.find_pacman()
+        return self._get_index(x, y)
+
+    def _get_index(self, x, y):
+        return x + y * 12
 
     def _get_delta(self, d: Direction) -> (int, int):
         delta_x: int = 0
@@ -67,7 +61,7 @@ class Game:
         return delta_x, delta_y
 
     def _get_state(self, x, y) -> State:
-        if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field) or x < 0:
+        if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
             return State.WALL
         switcher = {
             "o": State.POINT,

@@ -1,6 +1,8 @@
 from unittest import TestCase
 
-from game.game import Game, Direction, State
+from src.game import Game
+from src.direction import Direction
+from src.state import State
 
 
 class TestGame(TestCase):
@@ -19,6 +21,22 @@ class TestGame(TestCase):
             ["o", " ", "o", "o", " ", " ", "g", " ", "o", "o", " ", "o"],
             ["o", "o", "o", "o", "o", "o", "o", " ", "o", "o", " ", "d"],
         ]
+
+    def test_find_pacman_index(self):
+        self.game.field[3][4] = " "
+        self.game.field[5][11] = "p"
+        result = self.game.find_pacman_index()
+        self.assertEqual(71, result)
+
+    def test_find_pacman_index2(self):
+        self.game.field[3][4] = " "
+        self.game.field[0][0] = "p"
+        result = self.game.find_pacman_index()
+        self.assertEqual(0, result)
+
+    def test_move_should_return_index_of_field(self):
+        _, result = self.game.move(Direction.DOWN)
+        self.assertEqual(52, result)
 
     def test_find_pacman(self):
         x, y = self.game.find_pacman()
@@ -51,6 +69,15 @@ class TestGame(TestCase):
 
         self.assertEqual("p", self.game.field[y_old + 1][x_old])
 
+    def set_pacman(self, x, y):
+        self.game.field[3][4] = " "
+        self.game.field[y][x] = "p"
+
+    def test_move_wall(self):
+        self.set_pacman(10, 3)
+        field_type, idx = self.game.move(Direction.RIGHT)
+        self.assertEqual(State.POINT, field_type)
+
     def test_does_not_move_out_of_boundaries_y(self):
         for _ in range(4):
             self.game.move(Direction.DOWN)
@@ -64,27 +91,27 @@ class TestGame(TestCase):
         self.assertEqual(0, x)
 
     def test_move_should_return_point_state(self):
-        result: State = self.game.move(Direction.UP)
+        result, _ = self.game.move(Direction.UP)
         self.assertEqual(State.POINT, result)
 
     def test_move_should_return_ghost_state(self):
         self.game.move(Direction.UP)
         self.game.move(Direction.LEFT)
-        result = self.game.move(Direction.LEFT)
+        result, _ = self.game.move(Direction.LEFT)
         self.assertEqual(State.GHOST, result)
 
     def test_move_should_return_empty_state(self):
-        result = self.game.move(Direction.DOWN)
+        result, _ = self.game.move(Direction.DOWN)
         self.assertEqual(State.EMPTY, result)
 
     def test_move_should_return_star_state(self):
         x, y = self.game.find_pacman()
         self.game.field[y][x + 1] = "x"
-        result = self.game.move(Direction.RIGHT)
+        result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.STAR, result)
 
     def test_move_should_return_door_state(self):
         x, y = self.game.find_pacman()
         self.game.field[y][x + 1] = "d"
-        result = self.game.move(Direction.RIGHT)
+        result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.DOOR, result)
