@@ -3,6 +3,12 @@ from src.direction import Direction
 from src.game import Game
 from src.state import State
 import numpy as np
+import plotly.graph_objs as go
+import plotly.plotly as py
+import plotly.tools as plotly_tools
+import plotly as py
+import pandas as pd
+
 
 n_actions: int = 4
 n_states: int = 72
@@ -10,11 +16,11 @@ n_states: int = 72
 agent = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
-    discount=0.9,
-    alpha=0.0001,
-    epsilon=1,
+    discount=0.3,
+    alpha=0.001,  # learning rate of td(0)
+    epsilon=3,  #
     epsilon_decay=0.99,
-    lamb=0.45
+    lambda_=0.97
 )
 
 
@@ -66,21 +72,26 @@ def convert_to_one_hot(state_number):
 
 
 success = 0
-episodes = 600
+episodes = 1200
 avg_reward = 0
 max_reward = 0
-for e in range(episodes):
-    game = Game()
-    state = package_state(game.find_pacman_index())
-    total_reward = 0
-    done = False
+x = []
+y = []
+ma = []
 
+for e in range(episodes):
+    game = Game()  # reset game
+    state = package_state(game.find_pacman_index())  # init S
+    total_reward = 0  # init e = 0
+
+    done = False
     while not done:
+
         action, greedy = agent.get_e_greedy_action(state)
         direction = parse_action(action)
 
         field_type, next_index = game.move(direction)
-        if e > 590:
+        if e > episodes - 50:
             game.update_ui()
         reward, done = get_reward(field_type)
         next_state = package_state(next_index)  # next_index:int -> to vector of weights
@@ -90,21 +101,37 @@ for e in range(episodes):
         total_reward += reward
 
         if done:
+
+
+            if total_reward > max_reward:
+                max_reward = total_reward
+
+            if e >= episodes - 100:
+                success += 1
+
+            avg_reward += total_reward
+            x.append(e)
+            y.append(total_reward)
+            ma.append(avg_reward / (e + 1))
+
             if reward == 0:  # game has been terminated by door
                 print(f"episode: {e}/{episodes}, score: {total_reward:.2f} and goal has been found!")
-                if total_reward > max_reward:
-                    max_reward = total_reward
 
-                if e >= episodes - 100:
-                    success += 1
-                    avg_reward += total_reward
             else:  # game has been terminated by ghost
                 print(f"episode: {e}/{episodes}, score: {total_reward:.2f}")
             break
 
-    agent.reset_e_trace()
+agent.reset_e_trace()
 
 agent.print_weights()
 print(f'RECENT SUCCESS RATE: {success}/{100}')
-print(f'avg reward rate {avg_reward / 100}')
+print(f'total avg reward rate {avg_reward / episodes}')
 print(f'max reward rate {max_reward}')
+
+xy_data = go.Scatter(x=x, y=y, mode='markers', marker=dict(size=4), name='AAPL')
+# vvv clip first and last points of convolution
+mov_avg = go.Scatter(x=x[5:-4], y=ma[5:-4],
+                     line=dict(width=2, color='red'), name='Moving average')
+data = [xy_data, mov_avg]
+
+py.plotly.iplot(data, filename='results')

@@ -4,14 +4,14 @@ import random
 
 
 class Agent:
-    def __init__(self, n_actions, n_states, discount=0.8, alpha=0.1, epsilon=1, epsilon_decay=0.99, lamb=0.5):
+    def __init__(self, n_actions, n_states, discount=0.8, alpha=0.1, epsilon=1, epsilon_decay=0.99, lambda_=0.5):
         self.n_actions = n_actions
         self.n_states = n_states
         self.discount = discount
         self.alpha = alpha
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.lamb = lamb
+        self.lamb = lambda_
 
         tf.reset_default_graph()
         self.state_tensor, self.Q_values_tensor, self.chosen_value_tensor, self.opt, self.weight1 = self._build_model()
