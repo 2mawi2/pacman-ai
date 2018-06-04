@@ -17,8 +17,8 @@ agent = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
     discount=0.3,
-    alpha=0.001,  # learning rate of td(0)
-    epsilon=3,  #
+    alpha=0.01,  # learning rate of td(0)
+    epsilon=0,  #
     epsilon_decay=0.99,
     lambda_=0.97
 )
@@ -72,7 +72,7 @@ def convert_to_one_hot(state_number):
 
 
 success = 0
-episodes = 1200
+episodes = 300
 avg_reward = 0
 max_reward = 0
 x = []
@@ -102,7 +102,6 @@ for e in range(episodes):
 
         if done:
 
-
             if total_reward > max_reward:
                 max_reward = total_reward
 
@@ -113,7 +112,7 @@ for e in range(episodes):
             x.append(e)
             y.append(total_reward)
             ma.append(avg_reward / (e + 1))
-
+            #
             if reward == 0:  # game has been terminated by door
                 print(f"episode: {e}/{episodes}, score: {total_reward:.2f} and goal has been found!")
 
