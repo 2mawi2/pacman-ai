@@ -6,11 +6,11 @@ class Game:
     def __init__(self) -> None:
         self.field = [
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-            ["o", " ", " ", " ", " ", " ", "o", " ", "o", " ", " ", "o"],
-            ["o", " ", "g", "o", "o", " ", "o", " ", "o", "x", " ", "o"],
-            ["o", " ", "o", "o", "p", " ", "o", " ", "o", "o", " ", "o"],
-            ["o", " ", "o", "o", " ", " ", "g", " ", "o", "o", " ", "o"],
-            ["o", "o", "o", "o", "o", "o", "o", " ", "o", "o", " ", "d"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "o", "o", "W", "d"],
         ]
 
     def update_ui(self):
@@ -68,5 +68,6 @@ class Game:
             "g": State.GHOST,
             "x": State.STAR,
             "d": State.DOOR,
+            "W": State.WALL
         }
         return switcher.get(self.field[y][x], State.EMPTY)

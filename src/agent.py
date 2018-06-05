@@ -11,7 +11,7 @@ class Agent:
         self.alpha = alpha
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.lamb = lambda_
+        self.lambda_ = lambda_
 
         tf.reset_default_graph()
         self.state_tensor, self.Q_values_tensor, self.chosen_value_tensor, self.opt, self.weight1 = self._build_model()
@@ -54,7 +54,7 @@ class Agent:
 
     def _compute_e_trace(self, evaluated_gradients, e_trace):
         for i in range(len(e_trace)):
-            e_trace[i] = self.discount * self.lamb * e_trace[i] + evaluated_gradients[i]
+            e_trace[i] = self.discount * self.lambda_ * e_trace[i] + evaluated_gradients[i]
             assert (e_trace[i].shape == evaluated_gradients[i].shape)
         return e_trace
 
