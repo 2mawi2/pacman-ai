@@ -6,20 +6,21 @@ import numpy as np
 import plotly.graph_objs as go
 import plotly.plotly as py
 import plotly.tools as plotly_tools
-import plotly as py
+import plotly
 import pandas as pd
 
 n_actions: int = 4
 n_states: int = 72
+episodes = 8000
 
 agent = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
-    discount=0.5,
-    alpha=0.001,  # learning rate of td(0)
-    epsilon=1,  # should be between 0 and 1, higher -> more random decissions are taken
-    epsilon_decay=0.99,  # the reducing factor of the epsilon for each epoche
-    lambda_=0.5
+    discount=1,
+    alpha=0.001,  # used for gradient descent optimization
+    epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
+    epsilon_decay=0.99999,  # reduction of exploration rate for every epoche
+    lambda_=0.3
 )
 
 
@@ -30,10 +31,11 @@ def get_reward(next_state: State):
         State.STAR: 10,
         State.GHOST: -100,
         State.POINT: 1,
-        State.WALL: -0.1,
+        State.WALL: -1,
     }
     game_over = next_state == State.DOOR or next_state == State.GHOST
-    return switcher.get(next_state, 0), game_over
+    reward = switcher.get(next_state, 0)
+    return reward, game_over
 
 
 def parse_action(action: int) -> Direction:
@@ -71,7 +73,7 @@ def convert_to_one_hot(state_number):
 
 
 success = 0
-episodes = 100
+
 avg_reward = 0
 
 max_reward = 0
@@ -97,10 +99,9 @@ for e in range(episodes):
         action, greedy = agent.get_e_greedy_action(state)
         i = parse_action(action)
         path.append(i)  # append all path to the movement
-
         field_type, next_index = game.move(i)
         # if e > episodes - 50:
-        # game.update_ui()
+        #game.update_ui()
         reward, done = get_reward(field_type)
         next_state = package_state(next_index)  # next_index:int -> to vector of weights
         agent.learn(state, action, next_state, reward, greedy)
@@ -135,15 +136,16 @@ print(f'RECENT SUCCESS RATE: {success}/{100}')
 print(f'total avg reward rate {avg_reward / episodes}')
 print(f'max reward rate {max_reward}')
 
-# xy_data = go.Scatter(x=x, y=y, mode='markers', marker=dict(size=4), name='AAPL')
-## vvv clip first and last points of convolution
-# mov_avg = go.Scatter(x=x[5:-4], y=ma[5:-4],
-#                     line=dict(width=2, color='red'), name='Moving average')
-# data = [xy_data, mov_avg]
-# try:
-#    py.plotly.iplot(data, filename='results')
-# except:
-#    pass
+plotly.tools.set_credentials_file(username='2mawi2', api_key='AylpnmyLc4ghzSemcCwM')
+xy_data = go.Scatter(x=x, y=y, mode='markers', marker=dict(size=4), name='AAPL')
+# vvv clip first and last points of convolution
+mov_avg = go.Scatter(x=x[5:-4], y=ma[5:-4],
+                     line=dict(width=2, color='red'), name='Moving average')
+data = [xy_data, mov_avg]
+try:
+    plotly.plotly.iplot(data, filename='results')
+except:
+    pass
 #
 # print found solution
 
