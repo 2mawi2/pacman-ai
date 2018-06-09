@@ -1,26 +1,28 @@
+import numpy
+
+from Tools.scripts.make_ctype import values
+
 from src.agent import Agent
 from src.direction import Direction
 from src.game import Game
 from src.state import State
 import numpy as np
 import plotly.graph_objs as go
-import plotly.plotly as py
-import plotly.tools as plotly_tools
 import plotly
-import pandas as pd
 
 n_actions: int = 4
 n_states: int = 72
-episodes = 8000
+episodes = 200
+update_ui = False
 
-agent = Agent(
+agent_first = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
     discount=1,
-    alpha=0.001,  # used for gradient descent optimization
+    alpha=0.01,  # used for gradient descent optimization
     epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
-    epsilon_decay=0.99999,  # reduction of exploration rate for every epoche
-    lambda_=0.3
+    epsilon_decay=0.999,  # reduction of exploration rate for every epoche
+    lambda_=0.25
 )
 
 
@@ -34,8 +36,8 @@ def get_reward(next_state: State):
         State.WALL: -1,
     }
     game_over = next_state == State.DOOR or next_state == State.GHOST
-    reward = switcher.get(next_state, 0)
-    return reward, game_over
+    r = switcher.get(next_state, 0)
+    return r, game_over
 
 
 def parse_action(action: int) -> Direction:
@@ -92,19 +94,22 @@ for e in range(episodes):
 
     done = False
     while not done:
+        index_before = game.find_pacman_index()
 
-        if e >= episodes - 1 and game.find_pacman_index() == 9:
-            p = 2
-            pass
-        action, greedy = agent.get_e_greedy_action(state)
+        action, greedy = agent_first.get_e_greedy_action(state)
+
         i = parse_action(action)
         path.append(i)  # append all path to the movement
         field_type, next_index = game.move(i)
-        # if e > episodes - 50:
-        #game.update_ui()
+        # if e % 100 == 0:
+        if update_ui:
+            game.update_ui()
         reward, done = get_reward(field_type)
-        next_state = package_state(next_index)  # next_index:int -> to vector of weights
-        agent.learn(state, action, next_state, reward, greedy)
+
+        index = game.find_pacman_index()
+        next_state = package_state(next_index)  # next_index:int -> to vector of weigth
+
+        agent_first.learn(state, action, next_state, reward, greedy)
 
         state = next_state
         total_reward += reward
@@ -130,11 +135,13 @@ for e in range(episodes):
                 print(f"episode: {e}/{episodes}, score: {total_reward:.2f}")
             break
 
-agent.reset_e_trace()
-agent.print_weights()
+agent_first.reset_e_trace()
+agent_first.print_weights()
 print(f'RECENT SUCCESS RATE: {success}/{100}')
 print(f'total avg reward rate {avg_reward / episodes}')
 print(f'max reward rate {max_reward}')
+
+# plot result
 
 plotly.tools.set_credentials_file(username='2mawi2', api_key='AylpnmyLc4ghzSemcCwM')
 xy_data = go.Scatter(x=x, y=y, mode='markers', marker=dict(size=4), name='AAPL')
@@ -146,10 +153,19 @@ try:
     plotly.plotly.iplot(data, filename='results')
 except:
     pass
-#
+
 # print found solution
 
 print(f"Best solution found with maximum reward of: {max_reward}")
+print("first agent")
+game = Game()
+for i in ideal_path:
+    game.move(i)
+    game.update_ui()
+
+Game().update_ui_with_weights(agent_first.get_weights())
+print("second agent")
+
 game = Game()
 for i in ideal_path:
     game.move(i)

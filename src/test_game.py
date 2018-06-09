@@ -9,7 +9,7 @@ class TestGame(TestCase):
     game: Game = Game()
 
     def setUp(self):
-        # reset field
+        # reset v
         self.reset_game_space()
 
     def reset_game_space(self):
@@ -132,3 +132,22 @@ class TestGame(TestCase):
         self.game.field[y][x + 1] = "d"
         result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.DOOR, result)
+
+    def test_get_field_rating_should_be_zero(self):
+        self.assertEqual(0, self.game.get_field_reward()[0])
+
+    def test_get_field_rating(self):
+        self.game.move(Direction.UP)
+        self.game.move(Direction.LEFT)
+        self.assertEqual(2, self.game.get_field_reward()[0])
+
+    def test_get_field_rating_ghost(self):
+        self.game.field[4][6] = " "
+        self.game.move(Direction.UP)
+        self.assertEqual(-99, self.game.get_field_reward()[0])
+        self.assertEqual(True, self.game.get_field_reward()[1])
+
+    def test_get_field_rating_star(self):
+        self.game.field[2][9] = " "
+        self.game.move(Direction.UP)
+        self.assertEqual(11, self.game.get_field_reward()[0])

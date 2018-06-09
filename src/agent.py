@@ -25,7 +25,9 @@ class Agent:
                                  self.grads_and_vars]
         self.apply_placeholder_op = self.opt.apply_gradients(self.grad_placeholder)
 
-        self.sess = tf.Session()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=config)
         self.sess.run(tf.global_variables_initializer())
 
     def _build_model(self):
@@ -89,8 +91,11 @@ class Agent:
         self.e_trace = [0 * e for e in self.e_trace]
 
     def print_weights(self):
-        w1 = self.sess.run(self.weight1)
+        w1 = self.get_weights()
         print(w1)
+
+    def get_weights(self):
+        return self.sess.run(self.weight1)
 
     def print_Q_values(self, state):
         print(self.predict_Q_values(state))
@@ -124,7 +129,7 @@ class Agent:
 
     def apply_gradient_update(self, change):
         """
-        Eligibility trace (e_trace) is essentially a modified gradient.change is the change to be applied to the weights
+        Eligibility trace (e_trace) is essentially a modified gradient.change is the change to be applied to the weigth
         To alter the gradients before applying them, we have to do some session running and dictionary feeding
         """
         feed_dict = {}

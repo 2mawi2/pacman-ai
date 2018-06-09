@@ -1,8 +1,11 @@
 from src.direction import Direction
 from src.state import State
+import numpy as np
 
 
 class Game:
+    history = [int]  # history of fields pacman took in this game
+
     def __init__(self) -> None:
         self.field = [
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
@@ -10,7 +13,7 @@ class Game:
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
-            ["o", "o", "o", "o", "o", "o", "o", "W", "o", "o", "W", "d"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ]
 
     def update_ui(self):
@@ -30,7 +33,9 @@ class Game:
         self.field[y][x] = " "
         self.field[y + delta_y][x + delta_x] = "p"
 
-        index = self._get_index(x + delta_x, y + delta_y)
+        index = self.get_index(x + delta_x, y + delta_y)
+
+        self.history.append(index)
 
         return state, index
 
@@ -40,11 +45,24 @@ class Game:
                 if field is "p":
                     return x, y
 
+    def get_reward(self, next_state: State):
+        switcher = {
+            State.EMPTY: -1,
+            State.DOOR: 0,
+            State.STAR: 10,
+            State.GHOST: -100,
+            State.POINT: 1,
+            State.WALL: -1,
+        }
+        game_over = next_state == State.DOOR or next_state == State.GHOST
+        r = switcher.get(next_state, 0)
+        return r, game_over
+
     def find_pacman_index(self) -> (int, int):
         x, y = self.find_pacman()
-        return self._get_index(x, y)
+        return self.get_index(x, y)
 
-    def _get_index(self, x, y):
+    def get_index(self, x, y):
         return x + y * 12
 
     def _get_delta(self, d: Direction) -> (int, int):
@@ -71,3 +89,42 @@ class Game:
             "W": State.WALL
         }
         return switcher.get(self.field[y][x], State.EMPTY)
+
+    def update_ui_with_weights(self, weights: []):
+        for y, line in enumerate(self.field):
+            for x, _ in enumerate(line):
+                if self.field[y][x] == "o":
+                    index = self.get_index(x, y)
+                    weigth = weights[index]
+                    idx = np.argmax(weigth)
+                    if not all([w == 0 for w in weigth]):
+                        if idx == 0:  # right
+                            self.field[y][x] = ">"
+                        if idx == 1:  # left
+                            self.field[y][x] = "<"
+                        if idx == 2:  # up
+                            self.field[y][x] = "^"
+                        if idx == 3:  # down
+                            self.field[y][x] = "▼"
+        self.update_ui()
+
+    def get_field_reward(self):
+        points, stars, doors, ghosts = self._count_game_elements()
+        reward = 0
+        reward = reward + 44 - points
+        reward = reward + (1 - stars) * 10
+        reward = reward + (2 - ghosts) * -100
+        game_over = ghosts is not 2 or doors is not 0
+        return reward, game_over
+
+    def _count_game_elements(self):
+        points = self._count_element("o")
+        stars = self._count_element("x")
+        doors = self._count_element("d")
+        ghosts = self._count_element("g")
+        return points, stars, doors, ghosts
+
+    def _count_element(self, element: str):
+        values = np.array(self.field).flatten()
+        unique, counts = np.unique(values, return_counts=True)
+        return dict(zip(unique, counts)).get(element, 0)
