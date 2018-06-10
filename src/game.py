@@ -1,3 +1,5 @@
+from _sha1 import sha1
+
 from src.direction import Direction
 from src.state import State
 import numpy as np
@@ -7,14 +9,14 @@ class Game:
     history = [int]  # history of fields pacman took in this game
 
     def __init__(self) -> None:
-        self.field = [
+        self.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
-        ]
+        ])
 
     def update_ui(self):
         for line in self.field:
@@ -30,8 +32,8 @@ class Game:
         if state is State.WALL:
             delta_y, delta_x = 0, 0
 
-        self.field[y][x] = " "
-        self.field[y + delta_y][x + delta_x] = "p"
+        self.field[y, x] = " "
+        self.field[y + delta_y, x + delta_x] = "p"
 
         index = self.get_index(x + delta_x, y + delta_y)
 
@@ -40,10 +42,8 @@ class Game:
         return state, index
 
     def find_pacman(self) -> (int, int):
-        for y, line in enumerate(self.field):
-            for x, field in enumerate(line):
-                if field is "p":
-                    return x, y
+        x, y = np.where(self.field == "p")
+        return y[0], x[0]
 
     def get_reward(self, next_state: State):
         switcher = {
@@ -58,9 +58,8 @@ class Game:
         r = switcher.get(next_state, 0)
         return r, game_over
 
-    def find_pacman_index(self) -> (int, int):
-        x, y = self.find_pacman()
-        return self.get_index(x, y)
+    def find_pacman_index(self) -> int:
+        return np.where(self.field.flatten() == "p")[0]
 
     def get_index(self, x, y):
         return x + y * 12
@@ -88,33 +87,33 @@ class Game:
             "d": State.DOOR,
             "W": State.WALL
         }
-        return switcher.get(self.field[y][x], State.EMPTY)
+        return switcher.get(self.field[y, x][0], State.EMPTY)
 
     def update_ui_with_weights(self, weights: []):
         for y, line in enumerate(self.field):
             for x, _ in enumerate(line):
-                if self.field[y][x] == "o":
+                if self.field[y, x] == "o":
                     index = self.get_index(x, y)
                     weigth = weights[index]
                     idx = np.argmax(weigth)
                     if not all([w == 0 for w in weigth]):
                         if idx == 0:  # right
-                            self.field[y][x] = ">"
+                            self.field[y, x] = ">"
                         if idx == 1:  # left
-                            self.field[y][x] = "<"
+                            self.field[y, x] = "<"
                         if idx == 2:  # up
-                            self.field[y][x] = "^"
+                            self.field[y, x] = "^"
                         if idx == 3:  # down
-                            self.field[y][x] = "▼"
+                            self.field[y, x] = "▼"
         self.update_ui()
 
     def get_field_reward(self):
         points, stars, doors, ghosts = self._count_game_elements()
         reward = 0
-        reward = reward + 44 - points
+        reward = reward + 42 - points
         reward = reward + (1 - stars) * 10
         reward = reward + (2 - ghosts) * -100
-        game_over = ghosts is not 2 or doors is not 0
+        game_over = ghosts != 2 or doors != 1
         return reward, game_over
 
     def _count_game_elements(self):
@@ -125,6 +124,9 @@ class Game:
         return points, stars, doors, ghosts
 
     def _count_element(self, element: str):
-        values = np.array(self.field).flatten()
+        values = self.field.flatten()
         unique, counts = np.unique(values, return_counts=True)
         return dict(zip(unique, counts)).get(element, 0)
+
+    def get_state(self):
+        return hash(self.field.tostring())  # hash game_field for unique state id

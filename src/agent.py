@@ -101,9 +101,7 @@ class Agent:
         print(self.predict_Q_values(state))
 
     def learn(self, state, action, next_state, reward, greedy):
-        target = reward + self.get_max_Q_value(next_state)
-        old_Q = self.get_Q_value(state, action)
-        delta = target - old_Q
+        delta = reward + self.get_max_Q_value(next_state) - self.get_Q_value(state, action)
 
         assert abs(delta) < 1000
 

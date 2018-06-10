@@ -2,8 +2,12 @@ import random
 
 from src.direction import Direction
 from src.game import Game
+from hashlib import sha1
+import numpy as np
 
-episodes = 200
+from src.td0_agent import TD0Agent
+
+episodes = 2000
 update_ui = False
 
 success = 0
@@ -14,58 +18,31 @@ x = []
 y = []
 ma = []
 
-
-class TD0Agent:
-    def __init__(self, alpha: float, lambda_: float):
-        self.lambda_ = lambda_
-        self.alpha = alpha
-
-    def get_next_action(self) -> Direction:
-        return random.choice([Direction.RIGHT,
-                              Direction.LEFT,
-                              Direction.DOWN,
-                              Direction.UP])
-
-
 td0Agent = TD0Agent(
-    alpha=0.25,  # learning rate
-    lambda_=0.25,  # Diskontierungsfaktor
+    alpha=0.001,  # learning rate should go direction 0
+    gamma=0.25,  # Diskontierungsfaktor
+    epsilon=1,
+    epsilon_decay=0.99
 )
 
 for e in range(episodes):
     game = Game()
-    pacman_index = game.find_pacman_index()
+    state = game.get_state()
+
     total_reward = 0
 
     path = []
     done = False
     while not done:
-        state = game.field
-        action = td0Agent.get_next_action()
-        game.move(action)
-        next_state = game.field
-        reward = game.get_field_reward(state, action, next_state, reward, greedy)
-        # V(sk ) ← V(sk ) + α (c(sk ) + V(sk+1) − V(sk ))
-        action, greedy = agent_first.get_e_greedy_action(state)
-
-        i = parse_action(action)
-        path.append(i)  # append all path to the movement
-        field_type, next_index = game.move(i)
-        # if e % 100 == 0:
-        if update_ui:
-            game.update_ui()
-        reward, done = game.get_reward(field_type)
-
-        index = game.find_pacman_index()
-        next_state = package_state(next_index)  # next_index:int -> to vector of weigth
-
-        # if initial_visit:
-        agent_first.learn(state, action, next_state, reward, greedy)
-        # else:
-        #    agent_second.learn(state, action, next_state, reward, greedy)
+        action = td0Agent.get_action(state)
+        field_state, _ = game.move(action)
+        reward, done = game.get_reward(field_state)
+        # game.update_ui()
+        next_state = game.get_state()
+        td0Agent.learn(state, next_state, reward, action)
 
         state = next_state
-        total_reward += reward
+        # total_reward += reward
 
         if done:
 

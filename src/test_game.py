@@ -3,6 +3,7 @@ from unittest import TestCase
 from src.game import Game
 from src.direction import Direction
 from src.state import State
+import numpy as np
 
 
 class TestGame(TestCase):
@@ -13,24 +14,24 @@ class TestGame(TestCase):
         self.reset_game_space()
 
     def reset_game_space(self):
-        self.game.field = [
+        self.game.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
-            ["o", "o", "o", "o", "o", "o", "o", "W", "o", "o", "W", "d"],
-        ]
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
 
     def test_find_pacman_index(self):
-        self.game.field[3][4] = " "
-        self.game.field[5][11] = "p"
+        self.game.field[3, 4] = " "
+        self.game.field[5, 11] = "p"
         result = self.game.find_pacman_index()
         self.assertEqual(71, result)
 
     def test_find_pacman_index2(self):
-        self.game.field[3][4] = " "
-        self.game.field[0][0] = "p"
+        self.game.field[3, 4] = " "
+        self.game.field[0, 0] = "p"
         result = self.game.find_pacman_index()
         self.assertEqual(0, result)
 
@@ -46,34 +47,34 @@ class TestGame(TestCase):
     def test_move_field_cleaned_up(self):
         x_old, y_old = self.game.find_pacman()
         self.game.move(Direction.LEFT)
-        self.assertEqual(" ", self.game.field[y_old][x_old])
+        self.assertEqual(" ", self.game.field[y_old, x_old])
 
     def test_move_right(self):
         self.game.move(Direction.LEFT)
         x_old, y_old = self.game.find_pacman()
         self.game.move(Direction.RIGHT)
-        self.assertEqual("p", self.game.field[y_old][x_old + 1])
+        self.assertEqual("p", self.game.field[y_old, x_old + 1])
 
     def test_move_left(self):
         x_old, y_old = self.game.find_pacman()
         self.game.move(Direction.LEFT)
-        self.assertEqual("p", self.game.field[y_old][x_old - 1])
+        self.assertEqual("p", self.game.field[y_old, x_old - 1])
 
     def test_move_up(self):
         x_old, y_old = self.game.find_pacman()
         self.game.move(Direction.UP)
-        self.assertEqual("p", self.game.field[y_old - 1][x_old])
+        self.assertEqual("p", self.game.field[y_old - 1, x_old])
 
     def test_move_down(self):
         self.game.move(Direction.UP)
         x_old, y_old = self.game.find_pacman()
         self.game.move(Direction.DOWN)
 
-        self.assertEqual("p", self.game.field[y_old + 1][x_old])
+        self.assertEqual("p", self.game.field[y_old + 1, x_old])
 
     def set_pacman(self, x, y):
-        self.game.field[3][4] = " "
-        self.game.field[y][x] = "p"
+        self.game.field[3, 4] = " "
+        self.game.field[y, x] = "p"
 
     def test_move_wall(self):
         self.set_pacman(10, 3)
@@ -123,13 +124,13 @@ class TestGame(TestCase):
 
     def test_move_should_return_star_state(self):
         x, y = self.game.find_pacman()
-        self.game.field[y][x + 1] = "x"
+        self.game.field[y, x + 1] = "x"
         result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.STAR, result)
 
     def test_move_should_return_door_state(self):
         x, y = self.game.find_pacman()
-        self.game.field[y][x + 1] = "d"
+        self.game.field[y, x + 1] = "d"
         result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.DOOR, result)
 
@@ -142,12 +143,21 @@ class TestGame(TestCase):
         self.assertEqual(2, self.game.get_field_reward()[0])
 
     def test_get_field_rating_ghost(self):
-        self.game.field[4][6] = " "
+        self.game.field[4, 6] = " "
         self.game.move(Direction.UP)
         self.assertEqual(-99, self.game.get_field_reward()[0])
         self.assertEqual(True, self.game.get_field_reward()[1])
 
     def test_get_field_rating_star(self):
-        self.game.field[2][9] = " "
+        self.game.field[2, 9] = " "
         self.game.move(Direction.UP)
         self.assertEqual(11, self.game.get_field_reward()[0])
+
+    def test_get_state(self):
+        self.game.move(Direction.UP)
+        self.game.move(Direction.DOWN)
+        first_state = self.game.get_state()
+        self.game.move(Direction.UP)
+        self.game.move(Direction.DOWN)
+        second_state = self.game.get_state()
+        self.assertEqual(first_state, second_state)

@@ -12,7 +12,7 @@ import plotly
 
 n_actions: int = 4
 n_states: int = 72
-episodes = 200
+episodes = 2000
 update_ui = False
 
 agent_first = Agent(
@@ -21,7 +21,7 @@ agent_first = Agent(
     discount=1,
     alpha=0.01,  # used for gradient descent optimization
     epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
-    epsilon_decay=0.999,  # reduction of exploration rate for every epoche
+    epsilon_decay=0.9999,  # reduction of exploration rate for every epoche
     lambda_=0.25
 )
 
