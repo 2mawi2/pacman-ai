@@ -19,7 +19,7 @@ class Agent:
         tf.reset_default_graph()
         self.state_tensor, self.Q_values_tensor, self.chosen_value_tensor, self.opt, self.weight1 = self._build_model()
         self.grads_and_vars = self._get_gradients(self.opt)
-        self.e_trace = self._get_eligibility_trace(self.grads_and_vars)
+        self.e_trace = np.array(self._get_eligibility_trace(self.grads_and_vars))
 
         self.grad_placeholder = [(tf.placeholder("float", shape=grad[0].get_shape()), grad[1]) for grad in
                                  self.grads_and_vars]
@@ -88,7 +88,7 @@ class Agent:
             return self.get_best_action(state), False
 
     def reset_e_trace(self):
-        self.e_trace = [0 * e for e in self.e_trace]
+        self.e_trace *= 0
 
     def print_weights(self):
         w1 = self.get_weights()
@@ -110,7 +110,7 @@ class Agent:
             self.reset_e_trace()
         else:
             evaluated_gradients = self.get_gradients(state)
-            self.e_trace = self._compute_e_trace(evaluated_gradients, self.e_trace)
+            self.e_trace = np.array(self._compute_e_trace(evaluated_gradients, self.e_trace))
 
         change = self.add_negative_sign(delta)
         self.apply_gradient_update(change)
@@ -123,7 +123,9 @@ class Agent:
 
     def add_negative_sign(self, delta):
         """since tensorflow tries to minimize"""
-        return [-delta * e for e in self.e_trace]
+        return self.e_trace * -delta
+        # update = lambda i: i * -delta
+        # return [-delta * e for e in self.e_trace]
 
     def apply_gradient_update(self, change):
         """

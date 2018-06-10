@@ -1,6 +1,9 @@
+import itertools
+
 import numpy as np
 from numpy import random
 import operator
+from collections import defaultdict
 
 from src.direction import Direction
 
@@ -25,13 +28,20 @@ class TD0Agent:
         return self.Q_t.get(state, q_init)
 
     def max_Q(self, state: int):
-        if np.all([i == 0.0 for i in self.Q(state).values()]):
-            return self.get_random_action(), 0.0  # if no q values set -> take random action
-        else:
-            return max(self.Q(state).items(), key=operator.itemgetter(1))
+        qs: dict = self.Q(state)
 
-    def get_random_action(self) -> Direction:
-        return random.choice([Direction.RIGHT, Direction.LEFT, Direction.DOWN, Direction.UP])
+        max_value = max(qs.items(), key=operator.itemgetter(1))
+        all_maximas = [key for key, value in qs.items() if value == max_value[1]]
+        if len(all_maximas) > 0:
+            result = self.get_random_action(all_maximas), max_value[1]
+            return result
+        else:
+            return max(qs.items(), key=operator.itemgetter(1))
+
+    def get_random_action(self, actions=None) -> Direction:
+        if actions is None:
+            actions = [Direction.RIGHT, Direction.LEFT, Direction.DOWN, Direction.UP]
+        return random.choice(actions)
 
     def get_action(self, state: int) -> Direction:
         if np.random.rand() <= self.epsilon:
@@ -48,8 +58,9 @@ class TD0Agent:
         # delta = (1 - self.alpha) * (reward + self.gamma * self.max_Q(next_state)[1])
         # print(f"q : {q}")
 
-        td_target = reward + self.gamma * self.max_Q(next_state)[1]
+        td_target = reward + self.max_Q(next_state)[1]
         self.Q_t[state][action] = self.alpha * (td_target - self.Q_t[state][action])
+        self.alpha *= self.gamma
 
         # self.V_t[state] = self.V(state, next_state, reward)
         self.decay_epsilon()
