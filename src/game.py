@@ -6,7 +6,6 @@ import numpy as np
 
 
 class Game:
-    history = [int]  # history of fields pacman took in this game
 
     def __init__(self) -> None:
         self.field = np.array([
@@ -36,8 +35,6 @@ class Game:
         self.field[y + delta_y, x + delta_x] = "p"
 
         index = self.get_index(x + delta_x, y + delta_y)
-
-        self.history.append(index)
 
         return state, index
 
@@ -106,27 +103,6 @@ class Game:
                         if idx == 3:  # down
                             self.field[y, x] = "▼"
         self.update_ui()
-
-    def get_field_reward(self):
-        points, stars, doors, ghosts = self._count_game_elements()
-        reward = 0
-        reward = reward + 42 - points
-        reward = reward + (1 - stars) * 10
-        reward = reward + (2 - ghosts) * -100
-        game_over = ghosts != 2 or doors != 1
-        return reward, game_over
-
-    def _count_game_elements(self):
-        points = self._count_element("o")
-        stars = self._count_element("x")
-        doors = self._count_element("d")
-        ghosts = self._count_element("g")
-        return points, stars, doors, ghosts
-
-    def _count_element(self, element: str):
-        values = self.field.flatten()
-        unique, counts = np.unique(values, return_counts=True)
-        return dict(zip(unique, counts)).get(element, 0)
 
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id

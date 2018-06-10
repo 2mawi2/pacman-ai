@@ -5,9 +5,10 @@ from src.game import Game
 from hashlib import sha1
 import numpy as np
 
+from src.state import State
 from src.td0_agent import TD0Agent
 
-episodes = 2000
+episodes = 50000
 update_ui = False
 
 success = 0
@@ -19,10 +20,10 @@ y = []
 ma = []
 
 td0Agent = TD0Agent(
-    alpha=0.001,  # learning rate should go direction 0
-    gamma=0.25,  # Diskontierungsfaktor
-    epsilon=1,
-    epsilon_decay=0.99
+    alpha=0.1,  # chosen a high alpha since environment ist fully deterministic
+    gamma=1,  # Diskontierungsfaktor
+    epsilon=0.1,
+    epsilon_decay=1
 )
 
 for e in range(episodes):
@@ -37,12 +38,15 @@ for e in range(episodes):
         action = td0Agent.get_action(state)
         field_state, _ = game.move(action)
         reward, done = game.get_reward(field_state)
-        # game.update_ui()
+        if update_ui:
+            game.update_ui()
         next_state = game.get_state()
+        total_reward += reward
         td0Agent.learn(state, next_state, reward, action)
 
         state = next_state
-        # total_reward += reward
+
+        path.append(action)
 
         if done:
 
@@ -51,7 +55,8 @@ for e in range(episodes):
                 ideal_path = path
 
             if e >= episodes - 100:
-                success += 1
+                if field_state == State.DOOR:
+                    success += 1
 
             avg_reward += total_reward
             x.append(e)

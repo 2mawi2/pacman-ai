@@ -134,25 +134,6 @@ class TestGame(TestCase):
         result, _ = self.game.move(Direction.RIGHT)
         self.assertEqual(State.DOOR, result)
 
-    def test_get_field_rating_should_be_zero(self):
-        self.assertEqual(0, self.game.get_field_reward()[0])
-
-    def test_get_field_rating(self):
-        self.game.move(Direction.UP)
-        self.game.move(Direction.LEFT)
-        self.assertEqual(2, self.game.get_field_reward()[0])
-
-    def test_get_field_rating_ghost(self):
-        self.game.field[4, 6] = " "
-        self.game.move(Direction.UP)
-        self.assertEqual(-99, self.game.get_field_reward()[0])
-        self.assertEqual(True, self.game.get_field_reward()[1])
-
-    def test_get_field_rating_star(self):
-        self.game.field[2, 9] = " "
-        self.game.move(Direction.UP)
-        self.assertEqual(11, self.game.get_field_reward()[0])
-
     def test_get_state(self):
         self.game.move(Direction.UP)
         self.game.move(Direction.DOWN)

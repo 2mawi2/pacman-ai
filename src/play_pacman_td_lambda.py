@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy
 
 from Tools.scripts.make_ctype import values
@@ -11,15 +13,15 @@ import plotly.graph_objs as go
 import plotly
 
 n_actions: int = 4
-n_states: int = 72
-episodes = 2000
-update_ui = False
+n_states: int = 72_000
+episodes = 500
+update_ui = True
 
 agent_first = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
-    discount=1,
-    alpha=0.01,  # used for gradient descent optimization
+    discount=0.99,
+    alpha=1,  # used for gradient descent optimization
     epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
     epsilon_decay=0.9999,  # reduction of exploration rate for every epoche
     lambda_=0.25
@@ -62,7 +64,12 @@ def parse_state(state: State) -> int:
     return switcher.get(state, -1)
 
 
+state_dict = OrderedDict()
+
+
 def package_state(s):
+    state_dict[s] = None
+    s = list(state_dict.keys()).index(s)
     s = convert_to_one_hot(s)
     s = s.reshape(1, -1)
     return s
@@ -87,7 +94,7 @@ ma = []
 
 for e in range(episodes):
     game = Game()  # reset game
-    state = package_state(game.find_pacman_index())  # init S
+    state = package_state(game.get_state())  # init S
     total_reward = 0  # init e = 0
 
     path = []
@@ -107,7 +114,7 @@ for e in range(episodes):
         reward, done = get_reward(field_type)
 
         index = game.find_pacman_index()
-        next_state = package_state(next_index)  # next_index:int -> to vector of weigth
+        next_state = package_state(game.get_state())  # next_index:int -> to vector of weigth
 
         agent_first.learn(state, action, next_state, reward, greedy)
 

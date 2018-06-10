@@ -40,7 +40,16 @@ class TD0Agent:
             return self.max_Q(state)[0]
 
     def learn(self, state: int, next_state: int, reward: int, action: Direction):
-        delta = reward + self.max_Q(next_state)[1] - self.Q(state)[action]
+        if state not in self.Q_t:
+            self.Q_t[state] = q_init
+            # delta = self.alpha * self.gamma * self.max_Q(next_state)[1]
+            # q = reward + delta
+        # q = (1 - self.alpha) * self.Q(state)[action] + self.alpha * (reward + self.gamma * self.max_Q(next_state)[1])
+        # delta = (1 - self.alpha) * (reward + self.gamma * self.max_Q(next_state)[1])
+        # print(f"q : {q}")
+
+        td_target = reward + self.gamma * self.max_Q(next_state)[1]
+        self.Q_t[state][action] = self.alpha * (td_target - self.Q_t[state][action])
 
         # self.V_t[state] = self.V(state, next_state, reward)
         self.decay_epsilon()
