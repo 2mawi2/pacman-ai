@@ -1,15 +1,10 @@
-import random
-
 import plotly.graph_objs as go
 import plotly
 
-from src.direction import Direction
-from src.game import Game
-from hashlib import sha1
-import numpy as np
+from src.app.game import Game
 
-from src.state import State
-from src.td0_agent import TD0Agent
+from src.app.state import State
+from src.td_lambda_zero.td0_agent import TD0Agent
 
 episodes = 20000
 update_ui = False

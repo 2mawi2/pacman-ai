@@ -1,7 +1,5 @@
-from _sha1 import sha1
-
-from src.direction import Direction
-from src.state import State
+from src.app.direction import Direction
+from src.app.state import State
 import numpy as np
 
 

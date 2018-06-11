@@ -32,10 +32,6 @@ class Agent:
 
     def _build_model(self):
         state_tensor = tf.placeholder(tf.float32, shape=(1, self.n_states))
-        # weight1 = tf.Variable(tf.truncated_normal(shape=(self.n_states, self.n_actions), stddev=0.01))
-        # bias1 = tf.Variable(tf.zeros(self.n_actions))
-        # q_values_tensor = tf.add(tf.matmul(state_tensor, weight1), bias1)
-
         weight1 = tf.Variable(tf.zeros(shape=(self.n_states, self.n_actions)))
         q_values_tensor = tf.matmul(state_tensor, weight1)
         chosen_action_index = tf.argmax(q_values_tensor, 1)
@@ -45,10 +41,6 @@ class Agent:
         return state_tensor, q_values_tensor, chosen_value_tensor, opt, weight1
 
     def _get_gradients(self, opt):
-        """
-        opt.compute_gradients returns a list of gradients (of 'self.chosen_value_tensor')
-        and the variables they correspond to, with respect to 'trainable_variables'
-        """
         trainable_variables = tf.trainable_variables()
         return opt.compute_gradients(self.chosen_value_tensor, trainable_variables)
 
@@ -102,10 +94,8 @@ class Agent:
 
     def learn(self, state, action, next_state, reward, greedy):
         delta = reward + self.get_max_Q_value(next_state) - self.get_Q_value(state, action)
-
         assert abs(delta) < 1000
 
-        # as per Watkin's Q, if the target policy wouldn't have produced the same action, the trace is set to 0
         if greedy:
             self.reset_e_trace()
         else:
@@ -117,29 +107,19 @@ class Agent:
         self.decay_epsilon()
 
     def get_gradients(self, state):
-        """Getting gradients (and the variables they correspond to)"""
         grads_and_vars = self.sess.run(self.grads_and_vars, feed_dict={self.state_tensor: state})
         return [gv[0] for gv in grads_and_vars]
 
     def add_negative_sign(self, delta):
-        """since tensorflow tries to minimize"""
         return self.e_trace * -delta
         # update = lambda i: i * -delta
         # return [-delta * e for e in self.e_trace]
 
     def apply_gradient_update(self, change):
-        """
-        Eligibility trace (e_trace) is essentially a modified gradient.change is the change to be applied to the weigth
-        To alter the gradients before applying them, we have to do some session running and dictionary feeding
-        """
         feed_dict = {}
         for i in range(len(self.grad_placeholder)):
             feed_dict[self.grad_placeholder[i][0]] = change[i]
         self.sess.run(self.apply_placeholder_op, feed_dict=feed_dict)
 
     def decay_epsilon(self):
-        """
-           this should be improved as VDBE-Boltzmann with an adaptive e-greedy exploration rate
-           http://tokic.com/www/tokicm/publikationen/papers/AdaptiveEpsilonGreedyExploration.pdf
-        """
         self.epsilon = (self.epsilon * self.epsilon_decay)

@@ -1,11 +1,8 @@
-import itertools
-
 import numpy as np
 from numpy import random
 import operator
-from collections import defaultdict
 
-from src.direction import Direction
+from src.app.direction import Direction
 
 q_init = {
     Direction.UP: 0.0,

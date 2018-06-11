@@ -1,22 +1,22 @@
 from collections import OrderedDict
 
-from src.agent import Agent
-from src.direction import Direction
-from src.game import Game
-from src.state import State
+from src.q_learning.agent import Agent
+from src.app.direction import Direction
+from src.app.game import Game
+from src.app.state import State
 import numpy as np
 import plotly.graph_objs as go
 import plotly
 
 n_actions: int = 4
-n_states: int = 1_000_0
-episodes = 500
+n_states: int = 10_000
+episodes = 1000
 update_ui = False
 
 agent_first = Agent(
     n_actions=n_actions,  # for right, left, up, down
     n_states=n_states,  # for 72 game fields
-    discount=1,
+    discount=0.999,
     alpha=1,  # used for gradient descent optimization
     epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
     epsilon_decay=0.9999,  # reduction of exploration rate for every epoche
