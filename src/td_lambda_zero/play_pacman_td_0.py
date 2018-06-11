@@ -32,7 +32,9 @@ for e in range(episodes):
 
     path = []
     done = False
+    t = 0
     while not done:
+        t += 1
         action = td0Agent.get_action(state)
         field_state, _ = game.move(action)
         reward, done = game.get_reward(field_state)
@@ -41,12 +43,11 @@ for e in range(episodes):
         next_state = game.get_state()
         total_reward += reward
 
-        td0Agent.learn(state, next_state, reward, action)
+        td0Agent.learn(state, next_state, reward, t, action)
 
         state = next_state
 
         path.append(action)
-
         if done:
 
             if total_reward > max_reward:

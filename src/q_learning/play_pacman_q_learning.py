@@ -15,7 +15,7 @@ update_ui = False
 
 agent_first = Agent(
     n_actions=n_actions,  # for right, left, up, down
-    n_states=n_states,  # for 72 game fields
+    n_states=n_states,  # for 10_000 game fields
     discount=0.999,
     alpha=1,  # used for gradient descent optimization
     epsilon=1,  # exploration rate should be between 0 and 1, higher -> more random decissions are taken
