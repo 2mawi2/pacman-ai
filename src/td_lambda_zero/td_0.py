@@ -32,7 +32,7 @@ def parse_action(action: int) -> Direction:
     return switcher.get(action, -1)
 
 
-def q_learning(num_episodes, discount_factor=0.99, alpha=0.5, epsilon=0.01):
+def q_learning(num_episodes, discount_factor=0.99, alpha=0.5, epsilon=0.2):
     Q = defaultdict(lambda: np.zeros(4))
 
     policy = make_epsilon_greedy_policy(Q, epsilon, 4)
@@ -74,6 +74,8 @@ def q_learning(num_episodes, discount_factor=0.99, alpha=0.5, epsilon=0.01):
             Q[state][action] += alpha * td_delta
 
             if done:
+                if i_episode > num_episodes - 100:
+                    policy = make_epsilon_greedy_policy(Q, 0, 4)
                 avg_reward += total_reward
                 x.append(i_episode)
                 y.append(total_reward)
@@ -85,7 +87,7 @@ def q_learning(num_episodes, discount_factor=0.99, alpha=0.5, epsilon=0.01):
     return Q, ideal_path, max_reward, x, y, ma
 
 
-Q, P, m, x, y, ma = q_learning(20000)
+Q, P, m, x, y, ma = q_learning(5000)
 
 # print found solution
 
@@ -107,4 +109,3 @@ try:
     plotly.plotly.iplot(data, filename='results')
 except:
     pass
-
