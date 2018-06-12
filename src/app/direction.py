@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
-class Direction(Enum):
+class Direction(IntEnum):
     RIGHT = 0,
     LEFT = 1,
     UP = 2,
