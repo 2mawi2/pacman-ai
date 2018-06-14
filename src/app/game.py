@@ -21,6 +21,22 @@ class Game:
                 print(field + " ", end="")
             print(end="\n")
 
+    def move2(self, dir: Direction) -> (int, bool, int):
+        delta_x, delta_y = self._get_delta(dir)
+        x, y = self.find_pacman()
+        field_state: State = self._get_state(x + delta_x, y + delta_y)
+
+        if field_state is State.WALL:
+            delta_y, delta_x = 0, 0
+
+        self.field[y, x] = " "
+        self.field[y + delta_y, x + delta_x] = "p"
+
+        next_state = self.get_state()
+        reward, done = self.get_reward(field_state)
+
+        return reward, done, next_state
+
     def move(self, dir: Direction) -> (State, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
