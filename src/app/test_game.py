@@ -142,3 +142,10 @@ class TestGame(TestCase):
         self.game.move(Direction.DOWN)
         second_state = self.game.get_state()
         self.assertEqual(first_state, second_state)
+
+    def test_get_state_field(self):
+        state_field_result = self.game.get_state_field()
+        self.game.move(Direction.UP)
+        state2_field_result = self.game.get_state_field()
+        self.assertFalse(np.array_equal(state_field_result, state2_field_result))
+

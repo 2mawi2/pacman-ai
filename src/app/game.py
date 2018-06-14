@@ -120,3 +120,7 @@ class Game:
 
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id
+
+    def get_state_field(self):
+        return np.copy(self.field)
+
