@@ -87,16 +87,18 @@ class TestGame(TestCase):
         self.assertEqual(State.WALL, field_type)
 
     def test_does_not_move_out_of_boundaries_y(self):
-        self.game.move(Direction.LEFT)
-        self.game.move(Direction.LEFT)
-        self.game.move(Direction.DOWN)
-        self.game.move(Direction.DOWN)
-        self.game.move(Direction.LEFT)
-        self.game.move(Direction.LEFT)
-        [self.game.move(Direction.UP) for i in range(20)]
+        self.game.field = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
 
         x, y = self.game.find_pacman()
-        self.assertEqual(0, y)
+        self.assertEqual(4, x)
+        self.assertEqual(3, y)
 
     def test_does_not_move_out_of_boundaries_x(self):
         self.game.move(Direction.LEFT)
@@ -149,5 +151,26 @@ class TestGame(TestCase):
         state2_field_result = self.game.get_state_field()
         self.assertFalse(np.array_equal(state_field_result, state2_field_result))
 
-    def test_get_valid_states(self):
-        pass
+    def test_get_valid_states_returns_a_valid_state(self):
+        valid_state = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([valid_state])
+        self.assertTrue(np.array_equal(valid_state, result[0]))
+
+    def test_get_valid_states_doesn_not_return_an_invalid_state(self):
+        valid_state = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "p", " ", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([valid_state])
+        self.assertTrue(len(result) == 0)

@@ -53,8 +53,8 @@ class Game:
         return state, index
 
     def find_pacman(self) -> (int, int):
-        x, y = np.where(self.field == "p")
-        return y[0], x[0]
+        y, x = np.where(self.field == "p")
+        return x[0], y[0]
 
     def get_reward(self, next_state: State):
         switcher = {
@@ -124,3 +124,12 @@ class Game:
     def get_state_field(self):
         return np.copy(self.field)
 
+    def get_valid_states(self, states):
+        return [s for s in states if self._is_valid_state(s)]
+
+    def _is_valid_state(self, s):
+        x_before, y_before = self.find_pacman()
+        after = np.where(s == "p")
+        x_after, y_after = after[1][0], after[0][0]
+        delta_x, delta_y = x_before - x_after, y_before - y_after
+        return delta_x <= 1 and delta_y <= 1 and not (delta_x == 1 and delta_y == 1)
