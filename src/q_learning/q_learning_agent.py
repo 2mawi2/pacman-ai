@@ -27,11 +27,10 @@ class Agent:
         return Direction(action)
 
     def learn(self, next_state, reward, state, action):
-
         best_next_action = np.argmax(self.Q[next_state])
         td_target = reward + self.gamma * self.Q[next_state][best_next_action]
         td_delta = td_target - self.Q[state][action.value]
-        self.Q[state][action.value] += self.alpha * td_delta
+        self.Q[state][action.value] = self.Q[state][action.value] + self.alpha * td_delta
 
         self.epsilon *= (1 - self.epsilon_decay)
         self.alpha *= (1 - self.alpha_decay)

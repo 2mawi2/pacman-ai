@@ -4,7 +4,7 @@ import plotly
 
 from src.app.direction import Direction
 from src.app.game import Game
-from src.td_lambda_zero.agent import Agent
+from src.q_learning.q_learning_agent import Agent
 
 
 class Statistics:

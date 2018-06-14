@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from src.q_learning.agent import Agent
+from src.deep_q_learning.deep_q_learning_agent import Agent
 from src.app.direction import Direction
 from src.app.game import Game
 from src.app.state import State

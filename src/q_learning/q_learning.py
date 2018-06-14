@@ -4,7 +4,7 @@ import plotly
 
 from src.app.direction import Direction
 from src.app.game import Game
-from src.q_learning.agent import Agent
+from src.q_learning.q_learning_agent import Agent
 
 
 class Statistics:
@@ -19,7 +19,7 @@ class Statistics:
 statistics = Statistics()
 
 
-def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0.001, alpha_decay=0.0):
+def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0.001, alpha_decay=0.0):
     agent = Agent(gamma, alpha, epsilon, epsilon_decay, alpha_decay)
 
     for i_episode in range(num_episodes):
@@ -84,7 +84,7 @@ def iterate_lambda_epsilon():
     for _ in range(10):
         results = []
         for a, e in zip(alphas, epsilon):
-            td_learning(
+            q_learning(
                 num_episodes=1000,
                 gamma=0.9,
                 alpha=a,
@@ -101,7 +101,7 @@ def iterate_lambda_epsilon():
 
 if __name__ == '__main__':
     # iterate_lambda_epsilon()
-    td_learning(
+    q_learning(
         num_episodes=3000,
         gamma=0.9,
         alpha=1,

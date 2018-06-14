@@ -149,3 +149,5 @@ class TestGame(TestCase):
         state2_field_result = self.game.get_state_field()
         self.assertFalse(np.array_equal(state_field_result, state2_field_result))
 
+    def test_get_valid_states(self):
+        pass
