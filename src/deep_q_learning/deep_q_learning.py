@@ -3,7 +3,7 @@ from collections import OrderedDict
 from src.deep_q_learning.deep_q_learning_agent import Agent
 from src.app.direction import Direction
 from src.app.game import Game
-from src.app.state import State
+from src.app.fieldtype import FieldType
 import numpy as np
 import plotly.graph_objs as go
 import plotly
@@ -24,16 +24,16 @@ agent_first = Agent(
 )
 
 
-def get_reward(next_state: State):
+def get_reward(next_state: FieldType):
     switcher = {
-        State.EMPTY: -1,
-        State.DOOR: 0,
-        State.STAR: 10,
-        State.GHOST: -100,
-        State.POINT: 1,
-        State.WALL: -1,
+        FieldType.EMPTY: -1,
+        FieldType.DOOR: 0,
+        FieldType.STAR: 10,
+        FieldType.GHOST: -100,
+        FieldType.POINT: 1,
+        FieldType.WALL: -1,
     }
-    game_over = next_state == State.DOOR or next_state == State.GHOST
+    game_over = next_state == FieldType.DOOR or next_state == FieldType.GHOST
     r = switcher.get(next_state, 0)
     return r, game_over
 
@@ -48,14 +48,14 @@ def parse_action(action: int) -> Direction:
     return switcher.get(action, -1)
 
 
-def parse_state(state: State) -> int:
+def parse_state(state: FieldType) -> int:
     switcher = {
-        State.GHOST: 0,
-        State.EMPTY: 1,
-        State.POINT: 2,
-        State.STAR: 3,
-        State.WALL: 4,
-        State.DOOR: 5,
+        FieldType.GHOST: 0,
+        FieldType.EMPTY: 1,
+        FieldType.POINT: 2,
+        FieldType.STAR: 3,
+        FieldType.WALL: 4,
+        FieldType.DOOR: 5,
     }
     return switcher.get(state, -1)
 
@@ -122,7 +122,7 @@ for e in range(episodes):
                 ideal_path = path
 
             if e >= episodes - 100:
-                if field_type == State.DOOR:
+                if field_type == FieldType.DOOR:
                     success += 1
 
             avg_reward += total_reward

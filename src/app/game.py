@@ -1,5 +1,5 @@
 from src.app.direction import Direction
-from src.app.state import State
+from src.app.fieldtype import FieldType
 import numpy as np
 
 
@@ -24,9 +24,9 @@ class Game:
     def move2(self, dir: Direction) -> (int, bool, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
-        field_state: State = self._get_state(x + delta_x, y + delta_y)
+        field_state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
 
-        if field_state is State.WALL:
+        if field_state is FieldType.WALL:
             delta_y, delta_x = 0, 0
 
         self.field[y, x] = " "
@@ -37,12 +37,12 @@ class Game:
 
         return reward, done, next_state
 
-    def move(self, dir: Direction) -> (State, int):
+    def move(self, dir: Direction) -> (FieldType, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
-        state: State = self._get_state(x + delta_x, y + delta_y)
+        state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
 
-        if state is State.WALL:
+        if state is FieldType.WALL:
             delta_y, delta_x = 0, 0
 
         self.field[y, x] = " "
@@ -56,17 +56,17 @@ class Game:
         y, x = np.where(self.field == "p")
         return x[0], y[0]
 
-    def get_reward(self, next_state: State):
+    def get_reward(self, field_type: FieldType):
         switcher = {
-            State.EMPTY: -1,
-            State.DOOR: 0,
-            State.STAR: 10,
-            State.GHOST: -100,
-            State.POINT: 1,
-            State.WALL: -1,
+            FieldType.EMPTY: -1,
+            FieldType.DOOR: 0,
+            FieldType.STAR: 10,
+            FieldType.GHOST: -100,
+            FieldType.POINT: 1,
+            FieldType.WALL: -1,
         }
-        game_over = next_state == State.DOOR or next_state == State.GHOST
-        r = switcher.get(next_state, 0)
+        game_over = field_type == FieldType.DOOR or field_type == FieldType.GHOST
+        r = switcher.get(field_type, 0)
         return r, game_over
 
     def find_pacman_index(self) -> int:
@@ -88,17 +88,17 @@ class Game:
             delta_y = 1
         return delta_x, delta_y
 
-    def _get_state(self, x, y) -> State:
+    def _get_field_type(self, x, y) -> FieldType:
         if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
-            return State.WALL
+            return FieldType.WALL
         switcher = {
-            "o": State.POINT,
-            "g": State.GHOST,
-            "x": State.STAR,
-            "d": State.DOOR,
-            "W": State.WALL
+            "o": FieldType.POINT,
+            "g": FieldType.GHOST,
+            "x": FieldType.STAR,
+            "d": FieldType.DOOR,
+            "W": FieldType.WALL
         }
-        return switcher.get(self.field[y, x][0], State.EMPTY)
+        return switcher.get(self.field[y, x][0], FieldType.EMPTY)
 
     def update_ui_with_weights(self, weights: []):
         for y, line in enumerate(self.field):
@@ -133,3 +133,18 @@ class Game:
         x_after, y_after = after[1][0], after[0][0]
         delta_x, delta_y = x_before - x_after, y_before - y_after
         return delta_x <= 1 and delta_y <= 1 and not (delta_x == 1 and delta_y == 1)
+
+    def _get_reward_for_next_state(self, next_state) -> (int, bool):
+        y, x = np.where(next_state == "p")
+        next_field_type = self._get_field_type(x, y)
+        reward, done = self.get_reward(next_field_type)
+        return reward, done
+
+    def move_to_state(self, next_state) -> (int, bool):
+        if not self._is_valid_state(next_state):
+            raise ValueError()
+
+        reward, done = self._get_reward_for_next_state(next_state)
+
+        self.field = next_state
+        return reward, done

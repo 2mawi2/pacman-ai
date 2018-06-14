@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from src.app.game import Game
 from src.app.direction import Direction
-from src.app.state import State
+from src.app.fieldtype import FieldType
 import numpy as np
 
 
@@ -79,12 +79,12 @@ class TestGame(TestCase):
     def test_move_wall(self):
         self.set_pacman(10, 3)
         field_type, idx = self.game.move(Direction.RIGHT)
-        self.assertEqual(State.POINT, field_type)
+        self.assertEqual(FieldType.POINT, field_type)
 
     def test_move_wall_inside(self):
         self.set_pacman(10, 3)
         field_type, idx = self.game.move(Direction.DOWN)
-        self.assertEqual(State.WALL, field_type)
+        self.assertEqual(FieldType.WALL, field_type)
 
     def test_does_not_move_out_of_boundaries_y(self):
         self.game.field = np.array([
@@ -111,30 +111,30 @@ class TestGame(TestCase):
 
     def test_move_should_return_point_state(self):
         result, _ = self.game.move(Direction.UP)
-        self.assertEqual(State.POINT, result)
+        self.assertEqual(FieldType.POINT, result)
 
     def test_move_should_return_ghost_state(self):
         self.game.move(Direction.UP)
         self.game.move(Direction.LEFT)
         result, _ = self.game.move(Direction.LEFT)
-        self.assertEqual(State.GHOST, result)
+        self.assertEqual(FieldType.GHOST, result)
 
     def test_move_should_return_empty_state(self):
         self.game.move(Direction.UP)
         result, _ = self.game.move(Direction.DOWN)
-        self.assertEqual(State.EMPTY, result)
+        self.assertEqual(FieldType.EMPTY, result)
 
     def test_move_should_return_star_state(self):
         x, y = self.game.find_pacman()
         self.game.field[y, x + 1] = "x"
         result, _ = self.game.move(Direction.RIGHT)
-        self.assertEqual(State.STAR, result)
+        self.assertEqual(FieldType.STAR, result)
 
     def test_move_should_return_door_state(self):
         x, y = self.game.find_pacman()
         self.game.field[y, x + 1] = "d"
         result, _ = self.game.move(Direction.RIGHT)
-        self.assertEqual(State.DOOR, result)
+        self.assertEqual(FieldType.DOOR, result)
 
     def test_get_state(self):
         self.game.move(Direction.UP)
@@ -163,8 +163,8 @@ class TestGame(TestCase):
         result = self.game.get_valid_states([valid_state])
         self.assertTrue(np.array_equal(valid_state, result[0]))
 
-    def test_get_valid_states_doesn_not_return_an_invalid_state(self):
-        valid_state = np.array([
+    def test_get_valid_states_does_not_return_an_invalid_state(self):
+        invalid_state = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
             ["o", "W", "g", "p", " ", "W", "o", "W", "o", "x", "W", "o"],
@@ -172,5 +172,31 @@ class TestGame(TestCase):
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
-        result = self.game.get_valid_states([valid_state])
+        result = self.game.get_valid_states([invalid_state])
         self.assertTrue(len(result) == 0)
+
+    def test_move_to_state(self):
+        state = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        reward, done = self.game.move_to_state(state)
+        self.assertTrue(np.array_equal(state, self.game.field))
+        self.assertFalse(done)
+        self.assertEqual(1, reward)
+
+    def test_move_to_state_raises_for_invalid_state(self):
+        invalid_state = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "p", " ", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        with self.assertRaises(ValueError):
+            self.game.move_to_state(invalid_state)

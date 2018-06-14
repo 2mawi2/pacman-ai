@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class State(Enum):
+class FieldType(Enum):
     GHOST = 0,
     EMPTY = 1,
     POINT = 2,
