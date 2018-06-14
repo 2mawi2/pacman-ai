@@ -6,6 +6,11 @@ from src.app.direction import Direction
 
 
 class Agent:
+
+    """
+    alpha should be N(s,a) -> number of times the Q at the position s, a has been updated
+    epsilon should be (1 / t) -> 1 / number of trans
+    """
     def __init__(self, gamma, alpha, epsilon, epsilon_decay, alpha_decay):
         self.alpha_decay = alpha_decay
         self.epsilon_decay = epsilon_decay
@@ -27,7 +32,6 @@ class Agent:
         return Direction(action)
 
     def learn(self, next_state, reward, state, action):
-
         best_next_action = np.argmax(self.Q[next_state])
         td_target = reward + self.gamma * self.Q[next_state][best_next_action]
         td_delta = td_target - self.Q[state][action.value]
