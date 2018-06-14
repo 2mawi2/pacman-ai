@@ -130,6 +130,9 @@ class Game:
     def _is_valid_state(self, s):
         x_before, y_before = self.find_pacman()
         after = np.where(s == "p")
+        if len(after) == 0:
+            print("invalid state")
+
         x_after, y_after = after[1][0], after[0][0]
         delta_x, delta_y = x_before - x_after, y_before - y_after
         return delta_x <= 1 and delta_y <= 1 and not (delta_x == 1 and delta_y == 1)

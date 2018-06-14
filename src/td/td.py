@@ -4,7 +4,8 @@ import plotly
 
 from src.app.direction import Direction
 from src.app.game import Game
-from src.q_learning.q_learning_agent import Agent
+from src.td.agent import Agent
+import numpy
 
 
 class Statistics:
@@ -18,24 +19,29 @@ class Statistics:
 
 statistics = Statistics()
 
+all_collected_states = {}
 
-def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0.001, alpha_decay=0.0):
-    agent = Agent(gamma, alpha, epsilon, epsilon_decay, alpha_decay)
+
+def td_learning(num_episodes, gamma=0.99, alpha=0.5):
+    agent = Agent(gamma, alpha)
 
     for i_episode in range(num_episodes):
         path = []
         game = Game()
-        state = game.get_state()
+        state = game.get_state_field()
 
         total_reward = 0
 
         done = False
         while not done:
-            action = agent.get_action(state)
-            reward, done, next_state = game.move2(action)
-            # game.update_ui()
-
-            agent.learn(next_state, reward, state, action)
+            action = agent.get_random_action()
+            reward, done, _ = game.move2(action)
+            next_state = game.get_state_field()
+            agent.learn(next_state, reward, state)  # update V
+            state_hash = hash(state.tostring())
+            if state_hash not in all_collected_states:
+                all_collected_states[state_hash] = state
+            state = next_state
 
             path.append(action)
             total_reward += reward
@@ -46,14 +52,13 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=
 
             if done:
                 if i_episode > num_episodes - 100:
-                    agent.epsilon = 0
                     statistics.avg_reward += total_reward
                 statistics.x.append(i_episode)
                 statistics.y.append(total_reward)
                 statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
                 print(f"episode: {i_episode} finished with reward: {total_reward}")
 
-            state = next_state
+    return agent
 
 
 def print_best_solution():
@@ -76,93 +81,30 @@ def plot_data():
         pass
 
 
-def iterate_lambda_epsilon():
-    global all_results, statistics
-    alphas = [0.5 for _ in range(5)]  # list(reversed([0.5, 0.6, 0.7, 0.8, 0.9]))  #
-    epsilon = [0.5 for _ in range(5)]
-    all_results = []
-    for _ in range(10):
-        results = []
-        for a, e in zip(alphas, epsilon):
-            td_learning(
-                num_episodes=1000,
-                gamma=0.9,
-                alpha=a,
-                epsilon=e,
-                epsilon_decay=0
-            )
-            results.append((a, e, statistics.max_reward))
-            statistics = Statistics()
+def evaluate_policy_greedy(agent: Agent):
+    game = Game()
+    all_states_list = all_collected_states.values()
 
-        all_results.append(results)
+    total_reward = 0
+    done = False
+    if not done:
+        valid_states = numpy.array(game.get_valid_states(all_states_list))
+        probs = [agent.V[hash(s.tostring())] for s in valid_states]
+        best_next_state = numpy.choose(valid_states, probs)  # TODO  handle numpy choose
+        reward, done = game.move_to_state(best_next_state)
+        game.update_ui()
+        total_reward += reward
 
-    print(all_results)
+    print(f"policy evalutated with best reward {total_reward}")
 
 
 if __name__ == '__main__':
     # iterate_lambda_epsilon()
-    td_learning(
+    agent = td_learning(
         num_episodes=3000,
         gamma=0.9,
-        alpha=1,
-        epsilon=0.05,
-        epsilon_decay=0,
-        alpha_decay=0
+        alpha=1
     )
     print_best_solution()
-    plot_data()
-
-# [[(0.1, 0.1, 37), (0.25, 0.25, 39), (0.5, 0.5, 43), (0.75, 0.75, 41), (1, 1, 30)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 37), (0.5, 0.5, 41), (0.75, 0.75, 43), (1, 1, 30)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 41), (0.5, 0.5, 41), (0.75, 0.75, 43), (1, 1, 30)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 37), (0.5, 0.5, 43), (0.75, 0.75, 43), (1, 1, 30)],
-# [(0.1, 0.1, 36), (0.25, 0.25, 39), (0.5, 0.5, 43), (0.75, 0.75, 39), (1, 1, 30)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 43), (0.5, 0.5, 43), (0.75, 0.75, 41), (1, 1, 30)],
-# [(0.1, 0.1, 36), (0.25, 0.25, 41), (0.5, 0.5, 43), (0.75, 0.75, 43), (1, 1, 41)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 41), (0.5, 0.5, 41), (0.75, 0.75, 41), (1, 1, 30)],
-# [(0.1,# 0.1, 39), (0.25, 0.25, 43), (0.5, 0.5, 41), (0.75, 0.75, 41), (1, 1, 30)],
-# [(0.1, 0.1, 37), (0.25, 0.25, 41), (0.5, 0.5, 43), (0.75, 0.75, 43), (1, 1, 30)]]
-
-# [[(0.1, 1, 41), (0.25, 0.75, 41), (0.5, 0.5, 43), (0.75, 0.25, 39), (1, 0.1, 41)],
-# [(0.1, 1, 30), (0.25, 0.75, 41), (0.5, 0.5, 43), (0.75, 0.25, 39), (1, 0.1, 43)],
-# [(0.1, 1, 30), (0.25, 0.75, 43), (0.5, 0.5, 41), (0.75, 0.25, 41), (1, 0.1, 39)],
-# [(0.1, 1, 30), (0.25, 0.75, 30), (0.5, 0.5, 43), (0.75, 0.25, 41), (1, 0.1, 41)],
-# [(0.1, 1, 41), (0.25, 0.75, 41), (0.5, 0.5, 41), (0.75, 0.25, 41), (1, 0.1, 43)],
-# [(0.1, 1, 30), (0.25, 0.75, 41), (0.5, 0.5, 41), (0.75, 0.25, 41), (1, 0.1, 43)],
-# [(0.1, 1, 37), (0.25, 0.75, 41), (0.5, 0.5, 41), (0.75, 0.25, 41), (1, 0.1, 42)],
-# [(0.1, 1, 30), (0.25, 0.75, 41), (0.5, 0.5, 39), (0.75, 0.25, 43), (1, 0.1, 41)],
-# [(0.1, 1, 30), (0.25, 0.75, 30), (0.5, 0.5, 43), (0.75, 0.25, 41), (1, 0.1, 41)],
-# [(0.1, 1, 28), (0.25, 0.75, 30), (0.5, 0.5, 43), (0.75, #0.25, 41), (1, 0.1, 43)]]
-
-# [[(0.5, 1, 41), (0.5, 0.75, 43), (0.5, 0.5, 41), (0.5, 0.25, 41), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 43), (0.5, 0.5, 41), (0.5, 0.25, 41), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 30), (0.5, 0.5, 43), (0.5, 0.25, 39), (0.5, 0.1, 41)],
-# [(0.5, 1, 41), (0.5, 0.75, 41), (0.5, 0.5, 43), (0.5, 0.25, 43), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 30), (0.5, 0.5, 41), (0.5, 0.25, 41), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 43), (0.5, 0.5, 41), (0.5, 0.25, 43), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 30), (0.5, 0.5, 39), (0.5, 0.25, 41), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 41), (0.5, 0.5, 43), (0.5, 0.25, 43), (0.5, 0.1, 41)],
-# [(0.5, 1, 30), (0.5, 0.75, 43), (0.5, 0.5, 43), (0.5, 0.25, 41), (0.5, 0.1, 43)],
-# [(0.5, 1, 30), (0.5, 0.75, 43), (0.5, 0.5, 43), (0.5, 0.25, 40), (0.5, 0.1, 41)]]
-
-# [[(1, 0.5, 43), (0.75, 0.5, 43), (0.5, 0.5, 39), (0.25, 0.5, 43), (0.1, 0.5, 39)],
-# [(1, 0.5, 43), (0.75, 0.5, 43), (0.5, 0.5, 43), (0.25, 0.5, 41), (0.1, 0.5, 30)],
-# [(1, 0.5, 41), (0.75, 0.5, 43), (0.5, 0.5, 41), (0.25, 0.5, 43), (0.1, 0.5, 41)],
-# [(1, 0.5, 43), (0.75, 0.5, 41), (0.5, 0.5, 41), (0.25, 0.5, 39), (0.1, 0.5, 41)],
-# [(1, 0.5, 41), (0.75, 0.5, 43), (0.5, 0.5, 43), (0.25, 0.5, 31), (0.1, 0.5, 30)],
-# [(1, 0.5, 43), (0.75, 0.5, 43), (0.5, 0.5, 43), (0.25, 0.5, 41), (0.1, 0.5, 41)],
-# [(1, 0.5, 41), (0.75, 0.5, 41), (0.5, 0.5, 43), (0.25, 0.5, 43), (0.1, 0.5, 32)],
-# [(1, 0.5, 41), (0.75, 0.5, 43), (0.5, 0.5, 41), (0.25, 0.5, 43), (0.1, 0.5, 43)],
-# [(1, 0.5, 41), (0.75, 0.5, 43), (0.5, 0.5, 43), (0.25, 0.5, 43), (0.1, 0.5, 29)],
-# [(1, 0.5, 41), (0.75, 0.5, 43), (0.5, 0.5, 41), (0.25, 0.5, 43), (0.1, 0.5, 43)]]
-
-# [[(0.9, 0.5, 43), (0.8, 0.5, 41), (0.7, 0.5, 43), (0.6, 0.5, 41), (0.5, 0.5, 43)],
-# [(0.9, 0.5, 41), (0.8, 0.5, 43), (0.7, 0.5, 43), (0.6, 0.5, 43), (0.5, 0.5, 43)],
-# [(0.9, 0.5, 43), (0.8, 0.5, 41), (0.7, 0.5, 39), (0.6, 0.5, 43), (0.5, 0.5, 43)],
-# [(0.9, 0.5, 41), (0.8, 0.5, 41), (0.7, 0.5, 41), (0.6, 0.5, 41), (0.5, 0.5, 43)],
-# [(0.9, 0.5, 41), (0.8, 0.5, 43), (0.7, 0.5, 43), (0.6, 0.5, 43), (0.5, 0.5, 39)],
-# [(0.9, 0.5, 43), (0.8, 0.5, 41), (0.7, 0.5, 43), (0.6, 0.5, 43), (0.5, 0.5, 41)],
-# [(0.9, 0.5, 43), (0.8, 0.5, 43), (0.7, 0.5, 41), (0.6, 0.5, 43), (0.5, 0.5, 41)],
-# [(0.9, 0.5, 43), (0.8, 0.5, 41), (0.7, 0.5, 41), (0.6, 0.5, 39), (0.5, 0.5, 43)],
-# [(0.9, 0.5, 43), (0.8, 0.5, 43), (0.7, 0.5, 41), (0.6, 0.5, 41), (0.5, 0.5, 41)],
-# #[(0.9, 0.5, 43), (0.8, 0.5, 41), (0.7, 0.5, 43), (0.6, 0.5, 41), (0.5, 0.5, 41)]]
+    # plot_data()
+    evaluate_policy_greedy(agent)

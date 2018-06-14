@@ -7,35 +7,15 @@ from src.app.direction import Direction
 
 class Agent:
 
-    """
-    alpha should be N(s,a) -> number of times the Q at the position s, a has been updated
-    epsilon should be (1 / t) -> 1 / number of trans
-    """
-    def __init__(self, gamma, alpha, epsilon, epsilon_decay, alpha_decay):
-        self.alpha_decay = alpha_decay
-        self.epsilon_decay = epsilon_decay
-        self.epsilon = epsilon
+    def __init__(self, gamma, alpha):
         self.alpha = alpha
         self.gamma = gamma
-        self.n_actions = 4
-        self.Q = defaultdict(lambda: np.zeros(4))
+        self.V = defaultdict(lambda: 0)
 
-    def get_action_probs(self, state):
-        probabilities = np.ones(self.n_actions, dtype=float) * self.epsilon / self.n_actions
-        best_action = np.argmax(self.Q[state])
-        probabilities[best_action] += (1.0 - self.epsilon)
-        return probabilities
+    def get_random_action(self) -> Direction:
+        return Direction(np.random.choice([0, 1, 2, 3]))
 
-    def get_action(self, state) -> Direction:
-        action_probs = self.get_action_probs(state)
-        action = np.random.choice(np.arange(len(action_probs)), p=action_probs)
-        return Direction(action)
-
-    def learn(self, next_state, reward, state, action):
-        best_next_action = np.argmax(self.Q[next_state])
-        td_target = reward + self.gamma * self.Q[next_state][best_next_action]
-        td_delta = td_target - self.Q[state][action.value]
-        self.Q[state][action.value] += self.alpha * td_delta
-
-        self.epsilon *= (1 - self.epsilon_decay)
-        self.alpha *= (1 - self.alpha_decay)
+    def learn(self, next_state, reward, state):
+        state = hash(state.tostring())  # overwrite with hashcode
+        next_state = hash(next_state.tostring())  # overwrite with hashcode
+        self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
