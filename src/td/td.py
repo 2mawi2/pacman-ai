@@ -36,6 +36,7 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5):
         while not done:
             action = agent.get_random_action()
             reward, done, _ = game.move2(action)
+            game.update_ui()
             next_state = game.get_state_field()
             agent.learn(next_state, reward, state)  # update V
             state_hash = hash(state.tostring())
@@ -90,7 +91,6 @@ def evaluate_policy_greedy(agent: Agent):
     while not done:
         valid_states = numpy.array(game.get_valid_states(all_states_list))
         probs = [agent.V[hash(s.tostring())] for s in valid_states]
-        assert len(valid_states) == len(probs)
 
         best_next_state = max(zip(valid_states, probs), key=lambda i: i[1])[0]
 
