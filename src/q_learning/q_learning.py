@@ -47,7 +47,7 @@ def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0
             if done:
                 if i_episode > num_episodes - 100:
                     agent.epsilon = 0
-                    statistics.avg_reward += total_reward
+                statistics.avg_reward += total_reward
                 statistics.x.append(i_episode)
                 statistics.y.append(total_reward)
                 statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
@@ -78,20 +78,19 @@ def plot_data():
 
 def iterate_lambda_epsilon():
     global all_results, statistics
-    alphas = [0.5 for _ in range(5)]  # list(reversed([0.5, 0.6, 0.7, 0.8, 0.9]))  #
-    epsilon = [0.5 for _ in range(5)]
+    epsilon = [0.05, 0.1, 0.3, 0.4, 0.5]
     all_results = []
     for _ in range(10):
         results = []
-        for a, e in zip(alphas, epsilon):
+        for e in epsilon:
             q_learning(
                 num_episodes=1000,
                 gamma=0.9,
-                alpha=a,
+                alpha=1,
                 epsilon=e,
                 epsilon_decay=0
             )
-            results.append((a, e, statistics.max_reward))
+            results.append((e, statistics.max_reward, statistics.avg_reward))
             statistics = Statistics()
 
         all_results.append(results)
@@ -99,15 +98,16 @@ def iterate_lambda_epsilon():
     print(all_results)
 
 
+#
 if __name__ == '__main__':
-    # iterate_lambda_epsilon()
+    #iterate_lambda_epsilon()
     q_learning(
-        num_episodes=3000,
-        gamma=0.9,
-        alpha=1,
-        epsilon=0.05,
-        epsilon_decay=0,
-        alpha_decay=0
+       num_episodes=5000,
+       gamma=1,
+       alpha=1,
+       epsilon=0.5,
+       epsilon_decay=0,
+       alpha_decay=0
     )
     print_best_solution()
     plot_data()

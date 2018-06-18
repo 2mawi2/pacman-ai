@@ -29,7 +29,7 @@ class Game:
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
-            ["o", "d", "o", "o", "o", "o", "o", "W", "W", "W", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
 
     def update_ui(self):
@@ -130,8 +130,9 @@ class Game:
         return [s for s in states if self._is_valid_state(s)]
 
     def _is_valid_state(self, s):
-        if np.array_equal(s, self.field):
+        if s.tostring() == self.field.tostring():
             return False
+
         x_before, y_before = self.find_pacman()
         after = np.where(s == "p")
         x_after, y_after = after[1][0], after[0][0]
@@ -145,7 +146,7 @@ class Game:
         expected_future_state[y_before, x_before] = " "
         expected_future_state[y_after, x_after] = "p"
 
-        return np.array_equal(expected_future_state, s) and has_pacman_moved_in_range
+        return expected_future_state.tostring() == s.tostring() and has_pacman_moved_in_range
 
     def validate_occurence(self, s, x_after, y_after, item: str):
         n_o_after = collections.Counter(s.flatten())[item]

@@ -16,7 +16,11 @@ class Agent:
     def get_random_action(self) -> Direction:
         return Direction(np.random.choice(self.choices))
 
-    def learn(self, next_state, reward, state):
+    def learn(self, next_state, reward, state, done):
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
-        self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
+
+        if done:
+            self.V[state] = self.V[state] + self.alpha * (reward - self.V[state])
+        else:
+            self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
