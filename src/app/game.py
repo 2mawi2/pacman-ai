@@ -3,9 +3,25 @@ from src.app.fieldtype import FieldType
 import numpy as np
 import collections
 
+field_to_reward = {
+    FieldType.EMPTY: -1,
+    FieldType.DOOR: 0,
+    FieldType.STAR: 10,
+    FieldType.GHOST: -100,
+    FieldType.POINT: 1,
+    FieldType.WALL: -1,
+}
+
+value_to_fieldtype = {
+    "o": FieldType.POINT,
+    "g": FieldType.GHOST,
+    "x": FieldType.STAR,
+    "d": FieldType.DOOR,
+    "W": FieldType.WALL
+}
+
 
 class Game:
-
     def __init__(self) -> None:
         self.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
@@ -13,7 +29,7 @@ class Game:
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
-            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+            ["o", "d", "o", "o", "o", "o", "o", "W", "W", "W", "W", "o"],
         ])
 
     def update_ui(self):
@@ -58,16 +74,8 @@ class Game:
         return x[0], y[0]
 
     def get_reward(self, field_type: FieldType):
-        switcher = {
-            FieldType.EMPTY: -1,
-            FieldType.DOOR: 0,
-            FieldType.STAR: 10,
-            FieldType.GHOST: -100,
-            FieldType.POINT: 1,
-            FieldType.WALL: -1,
-        }
         game_over = field_type == FieldType.DOOR or field_type == FieldType.GHOST
-        r = switcher.get(field_type, 0)
+        r = field_to_reward.get(field_type, 0)
         return r, game_over
 
     def find_pacman_index(self) -> int:
@@ -92,14 +100,7 @@ class Game:
     def _get_field_type(self, x, y) -> FieldType:
         if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
             return FieldType.WALL
-        switcher = {
-            "o": FieldType.POINT,
-            "g": FieldType.GHOST,
-            "x": FieldType.STAR,
-            "d": FieldType.DOOR,
-            "W": FieldType.WALL
-        }
-        return switcher.get(self.field[y, x][0], FieldType.EMPTY)
+        return value_to_fieldtype.get(self.field[y, x][0], FieldType.EMPTY)
 
     def update_ui_with_weights(self, weights: []):
         for y, line in enumerate(self.field):

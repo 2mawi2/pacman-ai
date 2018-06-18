@@ -11,9 +11,10 @@ class Agent:
         self.alpha = alpha
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
+        self.choices = np.array([0, 1, 2, 3])
 
     def get_random_action(self) -> Direction:
-        return Direction(np.random.choice([0, 1, 2, 3]))
+        return Direction(np.random.choice(self.choices))
 
     def learn(self, next_state, reward, state):
         state = hash(state.tostring())  # overwrite with hashcode
