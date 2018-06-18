@@ -135,7 +135,7 @@ class Game:
             print("invalid state")
 
         x_after, y_after = after[1][0], after[0][0]
-        delta_x, delta_y = x_before - x_after, y_before - y_after
+        delta_x, delta_y = abs(x_before - x_after), abs(y_before - y_after)
         has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
                                     and (delta_y == 1 or delta_y == 0) \
                                     and not delta_x == delta_y

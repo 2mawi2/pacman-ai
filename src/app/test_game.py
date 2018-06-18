@@ -181,7 +181,7 @@ class TestGame(TestCase):
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
         result = self.game.get_valid_states([invalid_state, state])
-        self.assertTrue(np.equal(state, result[0]))
+        self.assertEqual(hash(state.tostring()), hash(result[0].tostring()))
 
     def test_get_valid_states_does_recognize_same_position(self):
         same_position = np.array([
@@ -224,19 +224,19 @@ class TestGame(TestCase):
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
-            ["o", "W", "o", " ", "p", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "p", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
-        same_position = np.array([
-            ["o", "o", "o", "o", "o", "o", " ", "o", "o", "o", "o", "o"],
+        o_already_taken = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
-            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
-            ["o", "W", "o", "p", " ", "W", "o", "W", "o", "o", "W", "o"],
-            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", " ", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "p", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
-        result = self.game.get_valid_states([same_position])
+        result = self.game.get_valid_states([o_already_taken])
         self.assertEqual(1, len(result))
 
     def test_get_valid_states_x_is_invalid(self):

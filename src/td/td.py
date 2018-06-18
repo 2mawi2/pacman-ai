@@ -36,7 +36,7 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5):
         while not done:
             action = agent.get_random_action()
             reward, done, _ = game.move2(action)
-            game.update_ui()
+            #game.update_ui()
             next_state = game.get_state_field()
             agent.learn(next_state, reward, state)  # update V
             state_hash = hash(state.tostring())
@@ -104,7 +104,7 @@ def evaluate_policy_greedy(agent: Agent):
 if __name__ == '__main__':
     # iterate_lambda_epsilon()
     agent = td_learning(
-        num_episodes=3000,
+        num_episodes=10000,
         gamma=0.9,
         alpha=1
     )
