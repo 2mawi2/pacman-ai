@@ -87,10 +87,13 @@ def evaluate_policy_greedy(agent: Agent):
 
     total_reward = 0
     done = False
-    if not done:
+    while not done:
         valid_states = numpy.array(game.get_valid_states(all_states_list))
         probs = [agent.V[hash(s.tostring())] for s in valid_states]
-        best_next_state = numpy.choose(valid_states, probs)  # TODO  handle numpy choose
+        assert len(valid_states) == len(probs)
+
+        best_next_state = max(zip(valid_states, probs), key=lambda i: i[1])[0]
+
         reward, done = game.move_to_state(best_next_state)
         game.update_ui()
         total_reward += reward
@@ -105,6 +108,6 @@ if __name__ == '__main__':
         gamma=0.9,
         alpha=1
     )
-    print_best_solution()
+    # print_best_solution()
     # plot_data()
     evaluate_policy_greedy(agent)

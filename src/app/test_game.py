@@ -164,6 +164,14 @@ class TestGame(TestCase):
         self.assertTrue(np.array_equal(valid_state, result[0]))
 
     def test_get_valid_states_does_not_return_an_invalid_state(self):
+        state = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
         invalid_state = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
@@ -172,7 +180,91 @@ class TestGame(TestCase):
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
-        result = self.game.get_valid_states([invalid_state])
+        result = self.game.get_valid_states([invalid_state, state])
+        self.assertTrue(np.equal(state, result[0]))
+
+    def test_get_valid_states_does_recognize_same_position(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_valid_states_invalid(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", " ", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", " ", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", " ", "p", "o", "o", "o", "W", "W", "W", "W", "d"]
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_valid_states_o_is_invalid(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", " ", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_valid_states_x_is_invalid(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", " ", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_valid_states_d_is_invalid(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", " "],
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_recognizes_field_before_must_be_empty(self):
+        same_position = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "p", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", "o", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([same_position])
+        self.assertTrue(len(result) == 0)
+
+    def test_get_valid_states_does_recognize_states_which_are_far_away(self):
+        far_away = np.array([
+            ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "p"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "o", "o", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+        ])
+        result = self.game.get_valid_states([far_away])
         self.assertTrue(len(result) == 0)
 
     def test_move_to_state(self):

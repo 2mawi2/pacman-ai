@@ -1,6 +1,7 @@
 from src.app.direction import Direction
 from src.app.fieldtype import FieldType
 import numpy as np
+import collections
 
 
 class Game:
@@ -135,7 +136,29 @@ class Game:
 
         x_after, y_after = after[1][0], after[0][0]
         delta_x, delta_y = x_before - x_after, y_before - y_after
-        return delta_x <= 1 and delta_y <= 1 and not (delta_x == 1 and delta_y == 1)
+        has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
+                                    and (delta_y == 1 or delta_y == 0) \
+                                    and not delta_x == delta_y
+
+        is_before_field_empty = s[y_before, x_before] == " "
+
+        is_valid_number_of_os = self.validate_occurence(s, x_after, y_after, "o")
+        is_valid_number_of_stars = self.validate_occurence(s, x_after, y_after, "x")
+        is_valid_number_of_doors = self.validate_occurence(s, x_after, y_after, "d")
+
+        return has_pacman_moved_in_range \
+               and is_before_field_empty \
+               and is_valid_number_of_os \
+               and is_valid_number_of_stars \
+               and is_valid_number_of_doors \
+
+    def validate_occurence(self, s, x_after, y_after, item: str):
+        n_o_after = collections.Counter(s.flatten())[item]
+        n_o_before = collections.Counter(self.field.flatten())[item]
+        if self.field[y_after, x_after] == item:
+            return n_o_before - n_o_after == 1
+        else:
+            return n_o_before - n_o_after == 0
 
     def _get_reward_for_next_state(self, next_state) -> (int, bool):
         y, x = np.where(next_state == "p")
