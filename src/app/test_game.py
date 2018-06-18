@@ -219,25 +219,25 @@ class TestGame(TestCase):
         result = self.game.get_valid_states([same_position])
         self.assertTrue(len(result) == 0)
 
-    def test_get_valid_states_o_already_taken(self):
+    def test_get_valid_states_o_already_taken_negative(self):
         self.game.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
-            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
-            ["o", "W", "p", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
-            ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "W", "g", " ", " ", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", " ", "p", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", " ", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
         o_already_taken = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
-            ["o", "W", " ", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
-            ["o", "W", "p", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
-            ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
+            ["o", "W", "p", " ", " ", "W", "o", "W", "o", "o", "W", "o"],
+            ["o", "W", "o", " ", "W", "W", "g", "W", "o", "o", "W", "o"],
+            ["o", "o", "o", " ", " ", "o", "o", "W", "W", "W", "W", "d"],
         ])
         result = self.game.get_valid_states([o_already_taken])
-        self.assertEqual(1, len(result))
+        self.assertTrue(len(result) == 0)
 
     def test_get_valid_states_x_is_invalid(self):
         same_position = np.array([

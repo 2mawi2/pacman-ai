@@ -129,28 +129,22 @@ class Game:
         return [s for s in states if self._is_valid_state(s)]
 
     def _is_valid_state(self, s):
+        if np.array_equal(s, self.field):
+            return False
         x_before, y_before = self.find_pacman()
         after = np.where(s == "p")
-        if len(after) == 0:
-            print("invalid state")
-
         x_after, y_after = after[1][0], after[0][0]
         delta_x, delta_y = abs(x_before - x_after), abs(y_before - y_after)
+
         has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
                                     and (delta_y == 1 or delta_y == 0) \
                                     and not delta_x == delta_y
 
-        is_before_field_empty = s[y_before, x_before] == " "
+        expected_future_state = np.copy(self.field)
+        expected_future_state[y_before, x_before] = " "
+        expected_future_state[y_after, x_after] = "p"
 
-        is_valid_number_of_os = self.validate_occurence(s, x_after, y_after, "o")
-        is_valid_number_of_stars = self.validate_occurence(s, x_after, y_after, "x")
-        is_valid_number_of_doors = self.validate_occurence(s, x_after, y_after, "d")
-
-        return has_pacman_moved_in_range \
-               and is_before_field_empty \
-               and is_valid_number_of_os \
-               and is_valid_number_of_stars \
-               and is_valid_number_of_doors \
+        return np.array_equal(expected_future_state, s) and has_pacman_moved_in_range
 
     def validate_occurence(self, s, x_after, y_after, item: str):
         n_o_after = collections.Counter(s.flatten())[item]
