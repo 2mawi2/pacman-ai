@@ -9,7 +9,6 @@ import numpy
 
 
 class Statistics:
-    ideal_path: [Direction] = []
     x: [int] = []
     y: [int] = []
     mean_average: [float] = []
@@ -22,11 +21,10 @@ statistics = Statistics()
 all_collected_states = {}
 
 
-def td_learning(num_episodes, gamma=0.99, alpha=0.5):
-    agent = Agent(gamma, alpha)
+def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
+    agent = Agent(gamma, alpha, epsilon)
 
     for i_episode in range(num_episodes):
-        path = []
         game = Game()
         state = game.get_state_field()
 
@@ -34,16 +32,12 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5):
 
         done = False
         while not done:
-            action = agent.get_random_action()
-            reward, done, _ = game.move2(action)
-            # game.update_ui()
-            next_state = game.get_state_field()
+            next_state, reward, done = agent.get_greedy_state(game, all_collected_states)
 
             state_hash = hash(state.tostring())
             if state_hash not in all_collected_states:
                 all_collected_states[state_hash] = state
 
-            path.append(action)
             total_reward += reward
 
             agent.learn(next_state, reward, state, done)  # update V
@@ -52,7 +46,6 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5):
 
             if total_reward > statistics.max_reward:
                 statistics.max_reward = total_reward
-                statistics.ideal_path = path
 
             if done:
                 if i_episode > num_episodes - 100:
@@ -64,14 +57,6 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5):
                     print(f"episode: {i_episode} finished with reward: {total_reward}")
 
     return agent
-
-
-def print_best_solution():
-    print(f"Best solution found with maximum reward of: {statistics.max_reward}")
-    game = Game()
-    for i in statistics.ideal_path:
-        game.move(i)
-        game.update_ui()
 
 
 def plot_data():
@@ -93,11 +78,9 @@ def evaluate_policy_greedy(agent: Agent):
     total_reward = 0
     done = False
     while not done:
-        valid_states = numpy.array(game.get_valid_states(all_states_list))
+        valid_states = game.get_valid_states(all_states_list)
         probs = [agent.V[hash(s.tostring())] for s in valid_states]
-        print(probs)
         best_next_state = max(zip(valid_states, probs), key=lambda i: i[1])[0]
-
         reward, done = game.move_to_state(best_next_state)
         game.update_ui()
         total_reward += reward
@@ -110,7 +93,8 @@ if __name__ == '__main__':
     agent = td_learning(
         num_episodes=1000,
         gamma=1,
-        alpha=1
+        alpha=1,
+        epsilon=0.5,
     )
     # print_best_solution()
     # plot_data()
