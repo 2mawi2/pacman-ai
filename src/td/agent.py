@@ -2,7 +2,9 @@ from collections.__init__ import defaultdict
 
 import numpy as np
 
-from src.app.direction import Direction
+from src.app.action import Action
+from src.app.fieldtype import FieldType
+from src.app.game import Game
 
 
 class Agent:
@@ -14,8 +16,9 @@ class Agent:
         self.V = defaultdict(lambda: 0)
         self.choices = np.array([0, 1, 2, 3])
 
-    def get_random_action(self) -> Direction:
-        return Direction(np.random.choice(self.choices))
+    def get_random_action(self, game: Game) -> Action:
+        actions: [Action] = game.get_valid_actions()
+        return Action(np.random.choice([i.value for i in actions]))
 
     def learn(self, next_state, reward, state, done):
         state = hash(state.tostring())  # overwrite with hashcode
@@ -26,17 +29,27 @@ class Agent:
         else:
             self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
 
-    def get_greedy_state(self, game, all_states_list):
+    def get_greedy_state(self, game: Game, all_states_list) -> (object, int, bool):
         if self.epsilon < np.random.rand():  # get random state
-            return self._get_next_random_state(game)
-        else:  # get state form V greedy
+            return self._get_random_state(game)
+        else:
             valid_states = game.get_valid_states(all_states_list)
-            if len(valid_states) == 0:
-                return self._get_next_random_state(game)
-            probs = [self.V[hash(s.tostring())] for s in valid_states]
-            return max(zip(valid_states, probs), key=lambda i: i[1])[0]
 
-    def _get_next_random_state(self, game):
-        action = self.get_random_action()
+            if len(valid_states) == 0:
+                return self._get_random_state(game)
+
+            Vs = [self.V[hash(s.tostring())] for s in valid_states]
+            best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
+
+            reward, done = game.get_reward_for_next_state(best_state)
+            return best_state, reward, done
+
+    def _get_random_state(self, game: Game) -> (object, int, bool):
+        # we should probably not get the same state again as next state
+        action = self.get_random_action(game)
+        state_before_random_move = game.get_field_state()
         reward, done, _ = game.move2(action)
-        return game.get_state_field()
+        state = game.get_field_state()
+
+        assert not np.array_equal(state, state_before_random_move)
+        return game.get_field_state(), reward, done

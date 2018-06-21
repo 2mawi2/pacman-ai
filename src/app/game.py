@@ -1,4 +1,4 @@
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.fieldtype import FieldType
 import numpy as np
 import collections
@@ -38,10 +38,10 @@ class Game:
                 print(field + " ", end="")
             print(end="\n")
 
-    def move2(self, dir: Direction) -> (int, bool, int):
+    def move2(self, dir: Action) -> (int, bool, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
-        field_state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
+        field_state: FieldType = self.get_field_type(x + delta_x, y + delta_y)
 
         if field_state is FieldType.WALL:
             delta_y, delta_x = 0, 0
@@ -54,10 +54,10 @@ class Game:
 
         return reward, done, next_state
 
-    def move(self, dir: Direction) -> (FieldType, int):
+    def move(self, dir: Action) -> (FieldType, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
-        state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
+        state: FieldType = self.get_field_type(x + delta_x, y + delta_y)
 
         if state is FieldType.WALL:
             delta_y, delta_x = 0, 0
@@ -84,20 +84,20 @@ class Game:
     def get_index(self, x, y):
         return x + y * 12
 
-    def _get_delta(self, d: Direction) -> (int, int):
+    def _get_delta(self, d: Action) -> (int, int):
         delta_x: int = 0
         delta_y: int = 0
-        if d is Direction.RIGHT:
+        if d is Action.RIGHT:
             delta_x = 1
-        elif d is Direction.LEFT:
+        elif d is Action.LEFT:
             delta_x = -1
-        elif d is Direction.UP:
+        elif d is Action.UP:
             delta_y = -1
-        elif d is Direction.DOWN:
+        elif d is Action.DOWN:
             delta_y = 1
         return delta_x, delta_y
 
-    def _get_field_type(self, x, y) -> FieldType:
+    def get_field_type(self, x, y) -> FieldType:
         if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
             return FieldType.WALL
         return value_to_fieldtype.get(self.field[y, x][0], FieldType.EMPTY)
@@ -123,7 +123,7 @@ class Game:
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id
 
-    def get_state_field(self):
+    def get_field_state(self):
         return np.copy(self.field)
 
     def get_valid_states(self, states):
@@ -156,9 +156,9 @@ class Game:
         else:
             return n_o_before - n_o_after == 0
 
-    def _get_reward_for_next_state(self, next_state) -> (int, bool):
+    def get_reward_for_next_state(self, next_state) -> (int, bool):
         y, x = np.where(next_state == "p")
-        next_field_type = self._get_field_type(x, y)
+        next_field_type = self.get_field_type(x, y)
         reward, done = self.get_reward(next_field_type)
         return reward, done
 
@@ -166,7 +166,17 @@ class Game:
         if not self._is_valid_state(next_state):
             raise ValueError()
 
-        reward, done = self._get_reward_for_next_state(next_state)
+        reward, done = self.get_reward_for_next_state(next_state)
 
         self.field = next_state
         return reward, done
+
+    def get_valid_actions(self) -> [Action]:
+        valid_actions = []
+        for d in Action:
+            delta_x, delta_y = self._get_delta(d)
+            x, y = self.find_pacman()
+            field_type: FieldType = self.get_field_type(x + delta_x, y + delta_y)
+            if field_type is not FieldType.WALL:
+                valid_actions.append(d)
+        return valid_actions

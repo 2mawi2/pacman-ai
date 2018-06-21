@@ -2,7 +2,7 @@ from collections.__init__ import defaultdict
 
 import numpy as np
 
-from src.app.direction import Direction
+from src.app.action import Action
 
 
 class Agent:
@@ -21,10 +21,10 @@ class Agent:
         probabilities[best_action] += (1.0 - self.epsilon)
         return probabilities
 
-    def get_action(self, state) -> Direction:
+    def get_action(self, state) -> Action:
         action_probs = self.get_action_probs(state)
         action = np.random.choice(np.arange(len(action_probs)), p=action_probs)
-        return Direction(action)
+        return Action(action)
 
     def learn(self, next_state, reward, state, action):
         best_next_action = np.argmax(self.Q[next_state])

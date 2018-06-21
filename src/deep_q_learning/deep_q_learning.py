@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from src.deep_q_learning.deep_q_learning_agent import Agent
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.game import Game
 from src.app.fieldtype import FieldType
 import numpy as np
@@ -38,12 +38,12 @@ def get_reward(next_state: FieldType):
     return r, game_over
 
 
-def parse_action(action: int) -> Direction:
+def parse_action(action: int) -> Action:
     switcher = {
-        0: Direction.RIGHT,
-        1: Direction.LEFT,
-        2: Direction.UP,
-        3: Direction.DOWN,
+        0: Action.RIGHT,
+        1: Action.LEFT,
+        2: Action.UP,
+        3: Action.DOWN,
     }
     return switcher.get(action, -1)
 

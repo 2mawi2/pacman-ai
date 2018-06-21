@@ -2,13 +2,13 @@ import plotly.graph_objs as go
 
 import plotly
 
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.game import Game
 from src.q_learning.q_learning_agent import Agent
 
 
 class Statistics:
-    ideal_path: [Direction] = []
+    ideal_path: [Action] = []
     x: [int] = []
     y: [int] = []
     mean_average: [float] = []

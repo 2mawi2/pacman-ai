@@ -2,7 +2,7 @@ import plotly.graph_objs as go
 
 import plotly
 
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.game import Game
 from src.td.agent import Agent
 import numpy
@@ -26,14 +26,13 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
 
     for i_episode in range(num_episodes):
         game = Game()
-        state = game.get_state_field()
+        state = game.get_field_state()
 
         total_reward = 0
 
         done = False
         while not done:
-            next_state, reward, done = agent.get_greedy_state(game, all_collected_states)
-
+            next_state, reward, done = agent.get_greedy_state(game, all_collected_states.values())
             state_hash = hash(state.tostring())
             if state_hash not in all_collected_states:
                 all_collected_states[state_hash] = state
@@ -53,8 +52,8 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
                 statistics.x.append(i_episode)
                 statistics.y.append(total_reward)
                 statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
-                if i_episode % 100 == 0:
-                    print(f"episode: {i_episode} finished with reward: {total_reward}")
+                # if i_episode % 100 == 0:
+                print(f"episode: {i_episode} finished with reward: {total_reward}")
 
     return agent
 
