@@ -163,7 +163,7 @@ class Game:
     def move_to_state(self, next_state) -> (int, bool):
         reward, done = self.get_reward_for_next_state(next_state)
 
-        self.field = next_state
+        self.field = np.copy(next_state)
         return reward, done
 
     def get_valid_actions(self) -> [Action]:

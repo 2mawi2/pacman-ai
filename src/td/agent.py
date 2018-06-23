@@ -25,10 +25,8 @@ class Agent:
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
 
-        if done:
-            self.V[state] = self.V[state] + self.alpha * (reward - self.V[state])
-        else:
-            self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
+        self.V[state] = self.V[state] + self.alpha * (
+                    reward + self.gamma * self.V[next_state] - self.V[state])
 
     def get_valid_states(self, all_states: dict, current_state: int) -> []:
         state_hashes = self.state_map[current_state]
@@ -47,7 +45,8 @@ class Agent:
             Vs = [self.V[hash(s.tostring())] for s in valid_states]
             best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
 
-            reward, done = game.get_reward_for_next_state(best_state)
+            reward, done = game.move_to_state(best_state)
+
             return best_state, reward, done
 
     def _get_random_state(self, game: Game) -> (object, int, bool):
@@ -58,7 +57,7 @@ class Agent:
         state = game.get_field_state()
         assert not np.array_equal(state, state_before_random_move)
 
-        self.state_map[hash(state_before_random_move.tostring())]\
+        self.state_map[hash(state_before_random_move.tostring())] \
             .add(hash(state.tostring()))
 
         return game.get_field_state(), reward, done
