@@ -126,27 +126,25 @@ class Game:
     def get_field_state(self):
         return np.copy(self.field)
 
-    def get_valid_states(self, states):
-        return [s for s in states if self._is_valid_state(s)]
 
-    def _is_valid_state(self, s):
-        if s.tostring() == self.field.tostring():
-            return False
+        # if s.tostring() == self.field.tostring():
+        #    return False
 
-        x_before, y_before = self.find_pacman()
-        after = np.where(s == "p")
-        x_after, y_after = after[1][0], after[0][0]
-        delta_x, delta_y = abs(x_before - x_after), abs(y_before - y_after)
-
-        has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
-                                    and (delta_y == 1 or delta_y == 0) \
-                                    and not delta_x == delta_y
-
-        expected_future_state = np.copy(self.field)
-        expected_future_state[y_before, x_before] = " "
-        expected_future_state[y_after, x_after] = "p"
-
-        return expected_future_state.tostring() == s.tostring() and has_pacman_moved_in_range
+    #
+    # x_before, y_before = self.find_pacman()
+    # after = np.where(s == "p")
+    # x_after, y_after = after[1][0], after[0][0]
+    # delta_x, delta_y = abs(x_before - x_after), abs(y_before - y_after)
+    #
+    # has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
+    #                            and (delta_y == 1 or delta_y == 0) \
+    #                            and not delta_x == delta_y
+    #
+    # expected_future_state = np.copy(self.field)
+    # expected_future_state[y_before, x_before] = " "
+    # expected_future_state[y_after, x_after] = "p"
+    #
+    # return expected_future_state.tostring() == s.tostring() and has_pacman_moved_in_range
 
     def validate_occurence(self, s, x_after, y_after, item: str):
         n_o_after = collections.Counter(s.flatten())[item]
@@ -163,9 +161,6 @@ class Game:
         return reward, done
 
     def move_to_state(self, next_state) -> (int, bool):
-        if not self._is_valid_state(next_state):
-            raise ValueError()
-
         reward, done = self.get_reward_for_next_state(next_state)
 
         self.field = next_state

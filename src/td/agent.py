@@ -15,6 +15,7 @@ class Agent:
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
         self.choices = np.array([0, 1, 2, 3])
+        self.state_map = defaultdict(lambda: set())
 
     def get_random_action(self, game: Game) -> Action:
         actions: [Action] = game.get_valid_actions()
@@ -29,13 +30,18 @@ class Agent:
         else:
             self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
 
-    def get_greedy_state(self, game: Game, all_states_list) -> (object, int, bool):
+    def get_valid_states(self, all_states: dict, current_state: int) -> []:
+        state_hashes = self.state_map[current_state]
+        return [all_states.get(i) for i in state_hashes]
+
+    def get_greedy_state(self, game: Game, all_states_list: dict) -> (object, int, bool):
         if self.epsilon < np.random.rand():  # get random state
             return self._get_random_state(game)
         else:
-            valid_states = game.get_valid_states(all_states_list)
+            current_state = game.get_state()
+            valid_states = self.get_valid_states(all_states_list, current_state)
 
-            if len(valid_states) == 0:
+            if len(valid_states) < 2:
                 return self._get_random_state(game)
 
             Vs = [self.V[hash(s.tostring())] for s in valid_states]
@@ -50,6 +56,5 @@ class Agent:
         state_before_random_move = game.get_field_state()
         reward, done, _ = game.move2(action)
         state = game.get_field_state()
-
         assert not np.array_equal(state, state_before_random_move)
         return game.get_field_state(), reward, done
