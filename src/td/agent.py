@@ -2,7 +2,7 @@ from collections.__init__ import defaultdict
 
 import numpy as np
 
-from src.app.direction import Direction
+from src.app.action import Action
 
 
 class Agent:
@@ -11,10 +11,9 @@ class Agent:
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
         self.N = defaultdict(lambda: 0)
-        self.choices = np.array([0, 1, 2, 3])
 
-    def get_random_action(self) -> Direction:
-        return Direction(np.random.choice(self.choices))
+    def get_random_action(self, valid_actions) -> Action:
+        return Action(np.random.choice(valid_actions))
 
     def learn(self, next_state, reward, state):
         state = hash(state.tostring())  # overwrite with hashcode

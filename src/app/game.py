@@ -1,4 +1,4 @@
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.fieldtype import FieldType
 import numpy as np
 import collections
@@ -25,7 +25,7 @@ class Game:
     def __init__(self) -> None:
         self.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "W", "W", "W", "o"],
             ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
@@ -38,7 +38,7 @@ class Game:
                 print(field + " ", end="")
             print(end="\n")
 
-    def move2(self, dir: Direction) -> (int, bool, int):
+    def move2(self, dir: Action) -> (int, bool, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
         field_state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
@@ -54,7 +54,7 @@ class Game:
 
         return reward, done, next_state
 
-    def move(self, dir: Direction) -> (FieldType, int):
+    def move(self, dir: Action) -> (FieldType, int):
         delta_x, delta_y = self._get_delta(dir)
         x, y = self.find_pacman()
         state: FieldType = self._get_field_type(x + delta_x, y + delta_y)
@@ -84,16 +84,16 @@ class Game:
     def get_index(self, x, y):
         return x + y * 12
 
-    def _get_delta(self, d: Direction) -> (int, int):
+    def _get_delta(self, d: Action) -> (int, int):
         delta_x: int = 0
         delta_y: int = 0
-        if d is Direction.RIGHT:
+        if d is Action.RIGHT:
             delta_x = 1
-        elif d is Direction.LEFT:
+        elif d is Action.LEFT:
             delta_x = -1
-        elif d is Direction.UP:
+        elif d is Action.UP:
             delta_y = -1
-        elif d is Direction.DOWN:
+        elif d is Action.DOWN:
             delta_y = 1
         return delta_x, delta_y
 
@@ -170,3 +170,14 @@ class Game:
 
         self.field = next_state
         return reward, done
+
+    def get_valid_actions(self) -> [Action]:
+        valid_actions = []
+        all_actions = [0, 1, 2, 3]
+        for action in all_actions:
+            delta_x, delta_y = self._get_delta(Action(action))
+            x, y = self.find_pacman()
+            field_type: FieldType = self._get_field_type(x + delta_x, y + delta_y)
+            if field_type is not FieldType.WALL:
+                valid_actions.append(action)
+        return valid_actions

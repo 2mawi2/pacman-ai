@@ -2,14 +2,14 @@ import plotly.graph_objs as go
 
 import plotly
 
-from src.app.direction import Direction
+from src.app.action import Action
 from src.app.game import Game
 from src.td.agent import Agent
 import numpy
 
 
 class Statistics:
-    ideal_path: [Direction] = []
+    ideal_path: [Action] = []
     x: [int] = []
     y: [int] = []
     mean_average: [float] = []
@@ -34,7 +34,8 @@ def td_learning(num_episodes, gamma=0.99):
 
         done = False
         while not done:
-            action = agent.get_random_action()
+            valid_actions = game.get_valid_actions()
+            action = agent.get_random_action(valid_actions)
             reward, done, _ = game.move2(action)
             #game.update_ui()
             next_state = game.get_state_field()
