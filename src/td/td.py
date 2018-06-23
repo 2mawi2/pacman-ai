@@ -27,23 +27,23 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
     for i_episode in range(num_episodes):
         game = Game()
         state = game.get_field_state()
-
+        all_collected_states[hash(state.tostring())] = state
         total_reward = 0
 
         done = False
         while not done:
             next_state, reward, done = agent.get_greedy_state(game, all_collected_states)
 
-            state_hash = hash(state.tostring())
+            next_state_hash = hash(next_state.tostring())
 
-            if state_hash not in all_collected_states:
-                agent.state_map[state_hash].add(hash(next_state.tostring()))
-                all_collected_states[state_hash] = state
+            if next_state_hash not in all_collected_states:
+                all_collected_states[next_state_hash] = next_state
+                print(agent.state_map[next_state_hash])
 
             total_reward += reward
 
             agent.learn(next_state, reward, state, done)  # update V
-
+            game.field = next_state
             state = next_state
 
             if total_reward > statistics.max_reward:
@@ -93,7 +93,7 @@ def evaluate_policy_greedy(agent: Agent):
 if __name__ == '__main__':
     # iterate_lambda_epsilon()
     agent = td_learning(
-        num_episodes=10000,
+        num_episodes=100000,
         gamma=1,
         alpha=1,
         epsilon=0.5,

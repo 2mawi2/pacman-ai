@@ -32,7 +32,7 @@ class Agent:
 
     def get_valid_states(self, all_states: dict, current_state: int) -> []:
         state_hashes = self.state_map[current_state]
-        return [all_states.get(i) for i in state_hashes]
+        return [all_states[i] for i in state_hashes]
 
     def get_greedy_state(self, game: Game, all_states_list: dict) -> (object, int, bool):
         if self.epsilon < np.random.rand():  # get random state
@@ -57,4 +57,8 @@ class Agent:
         reward, done, _ = game.move2(action)
         state = game.get_field_state()
         assert not np.array_equal(state, state_before_random_move)
+
+        self.state_map[hash(state_before_random_move.tostring())]\
+            .add(hash(state.tostring()))
+
         return game.get_field_state(), reward, done
