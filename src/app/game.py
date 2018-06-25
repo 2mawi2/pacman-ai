@@ -25,8 +25,8 @@ class Game:
     def __init__(self) -> None:
         self.field = np.array([
             ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-            ["o", "W", "W", "W", "W", "W", "o", "W", "o", "W", "W", "o"],
-            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "x", "W", "o"],
+            ["o", "W", "W", "W", "W", "W", "o", "W", "W", "W", "W", "o"],
+            ["o", "W", "g", "o", "o", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "p", "W", "o", "W", "o", "o", "W", "o"],
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
@@ -101,24 +101,6 @@ class Game:
         if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
             return FieldType.WALL
         return value_to_fieldtype.get(self.field[y, x][0], FieldType.EMPTY)
-
-    def update_ui_with_weights(self, weights: []):
-        for y, line in enumerate(self.field):
-            for x, _ in enumerate(line):
-                if self.field[y, x] == "o":
-                    index = self.get_index(x, y)
-                    weigth = weights[index]
-                    idx = np.argmax(weigth)
-                    if not all([w == 0 for w in weigth]):
-                        if idx == 0:  # right
-                            self.field[y, x] = ">"
-                        if idx == 1:  # left
-                            self.field[y, x] = "<"
-                        if idx == 2:  # up
-                            self.field[y, x] = "^"
-                        if idx == 3:  # down
-                            self.field[y, x] = "▼"
-        self.update_ui()
 
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id

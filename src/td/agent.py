@@ -3,13 +3,13 @@ from collections.__init__ import defaultdict
 import numpy as np
 
 from src.app.action import Action
-from src.app.fieldtype import FieldType
 from src.app.game import Game
 
 
 class Agent:
 
-    def __init__(self, gamma, alpha, epsilon):
+    def __init__(self, gamma, alpha, epsilon, epsilon_decay):
+        self.epsilon_decay = epsilon_decay
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
@@ -22,26 +22,26 @@ class Agent:
         actions: [Action] = game.get_valid_actions()
         return Action(np.random.choice([i.value for i in actions]))
 
-    def learn(self, next_state, reward, state, done):
+    def learn(self, next_state, reward, state):
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
-
         alpha = 1 / (self.N[state] + 1)
-        self.V[state] = self.V[state] + alpha * (
-                    reward + self.gamma * self.V[next_state] - self.V[state])
+        self.V[state] = self.V[state] + alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
+        self.N[state] += 1
 
     def get_valid_states(self, all_states: dict, current_state: int) -> []:
         state_hashes = self.state_map[current_state]
         return [all_states[i] for i in state_hashes]
 
     def get_greedy_state(self, game: Game, all_states_list: dict) -> (object, int, bool):
-        if self.epsilon < np.random.rand():  # get random state
+        self.epsilon *= self.epsilon_decay
+        if (1 - self.epsilon) < np.random.rand():  # get random state
             return self._get_random_state(game)
         else:
             current_state = game.get_state()
             valid_states = self.get_valid_states(all_states_list, current_state)
 
-            if len(valid_states) < 2:
+            if len(valid_states) < 1:
                 return self._get_random_state(game)
 
             Vs = [self.V[hash(s.tostring())] for s in valid_states]

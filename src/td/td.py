@@ -23,8 +23,8 @@ statistics = Statistics()
 all_collected_states = {}
 
 
-def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
-    agent = Agent(gamma, alpha, epsilon)
+def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5, epsilon_decay=0.009):
+    agent = Agent(gamma, alpha, epsilon, epsilon_decay)
 
     for i_episode in range(num_episodes):
         game = Game()
@@ -40,12 +40,15 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
 
             if next_state_hash not in all_collected_states:
                 all_collected_states[next_state_hash] = next_state
-                #print(agent.state_map[next_state_hash])
 
             total_reward += reward
 
-            agent.learn(next_state, reward, state, done)  # update V
+            agent.learn(next_state, reward, state)  # update V
+
             state = next_state
+
+            if i_episode > num_episodes - 100:
+                agent.epsilon = 0
 
             if total_reward > statistics.max_reward:
                 statistics.max_reward = total_reward
@@ -56,8 +59,6 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
                 statistics.x.append(i_episode)
                 statistics.y.append(total_reward)
                 statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
-                if i_episode % 100 == 0:
-                    agent.epsilon = 0
                 print(f"episode: {i_episode} finished with reward: {total_reward}")
 
     return agent
@@ -80,34 +81,34 @@ def evaluate_policy_greedy(agent: Agent):
 
     total_reward = 0
     done = False
-    visited_states = defaultdict(lambda: 0)
+    # visited_states = defaultdict(lambda: 0)
     while not done:
         current_state = game.get_state()
         valid_states = agent.get_valid_states(all_collected_states, current_state)
 
-        for s in valid_states:
-            if visited_states[hash(s.tostring())] > 1:
-                valid_states.remove(s)
+        # for s in valid_states:
+        #    if visited_states[hash(s.tostring())] > 1:
+        #        valid_states.remove(s)#
 
         probs = [agent.V[hash(s.tostring())] for s in valid_states]
         best_next_state = max(zip(valid_states, probs), key=lambda i: i[1])[0]
 
         reward, done = game.move_to_state(best_next_state)
-        visited_states[hash(best_next_state.tostring())] += 1
 
         game.update_ui()
         total_reward += reward
 
-    #print(f"policy evalutated with best reward {total_reward}")
+    # print(f"policy evalutated with best reward {total_reward}")
 
 
 if __name__ == '__main__':
     # iterate_lambda_epsilon()
     agent = td_learning(
-        num_episodes=100000,
+        num_episodes=10000,
         gamma=1,
         alpha=1,
-        epsilon=0.5,
+        epsilon=1,
+        epsilon_decay=0.99999
     )
     # print_best_solution()
     # plot_data()
