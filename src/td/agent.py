@@ -14,6 +14,7 @@ class Agent:
         self.alpha = alpha
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
+        self.N = defaultdict(lambda: 0)
         self.choices = np.array([0, 1, 2, 3])
         self.state_map = defaultdict(lambda: set())
 
@@ -25,7 +26,8 @@ class Agent:
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
 
-        self.V[state] = self.V[state] + self.alpha * (
+        alpha = 1 / (self.N[state] + 1)
+        self.V[state] = self.V[state] + alpha * (
                     reward + self.gamma * self.V[next_state] - self.V[state])
 
     def get_valid_states(self, all_states: dict, current_state: int) -> []:

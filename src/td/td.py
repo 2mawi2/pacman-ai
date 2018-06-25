@@ -57,7 +57,8 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5):
                 statistics.y.append(total_reward)
                 statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
                 if i_episode % 100 == 0:
-                    print(f"episode: {i_episode} finished with reward: {total_reward}")
+                    agent.epsilon = 0
+                print(f"episode: {i_episode} finished with reward: {total_reward}")
 
     return agent
 
