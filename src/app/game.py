@@ -17,7 +17,8 @@ value_to_fieldtype = {
     "g": FieldType.GHOST,
     "x": FieldType.STAR,
     "d": FieldType.DOOR,
-    "W": FieldType.WALL
+    "W": FieldType.WALL,
+    " ": FieldType.EMPTY
 }
 
 
@@ -98,35 +99,15 @@ class Game:
         return delta_x, delta_y
 
     def get_field_type(self, x, y) -> FieldType:
-        if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
+        if y >= 6 or y < 0 or x >= 12 or x < 0:
             return FieldType.WALL
-        return value_to_fieldtype.get(self.field[y, x][0], FieldType.EMPTY)
+        return value_to_fieldtype[self.field[y, x][0]]
 
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id
 
     def get_field_state(self):
         return np.copy(self.field)
-
-
-        # if s.tostring() == self.field.tostring():
-        #    return False
-
-    #
-    # x_before, y_before = self.find_pacman()
-    # after = np.where(s == "p")
-    # x_after, y_after = after[1][0], after[0][0]
-    # delta_x, delta_y = abs(x_before - x_after), abs(y_before - y_after)
-    #
-    # has_pacman_moved_in_range = (delta_x == 1 or delta_x == 0) \
-    #                            and (delta_y == 1 or delta_y == 0) \
-    #                            and not delta_x == delta_y
-    #
-    # expected_future_state = np.copy(self.field)
-    # expected_future_state[y_before, x_before] = " "
-    # expected_future_state[y_after, x_after] = "p"
-    #
-    # return expected_future_state.tostring() == s.tostring() and has_pacman_moved_in_range
 
     def validate_occurence(self, s, x_after, y_after, item: str):
         n_o_after = collections.Counter(s.flatten())[item]
@@ -144,7 +125,6 @@ class Game:
 
     def move_to_state(self, next_state) -> (int, bool):
         reward, done = self.get_reward_for_next_state(next_state)
-
         self.field = np.copy(next_state)
         return reward, done
 
