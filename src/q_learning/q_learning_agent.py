@@ -23,7 +23,7 @@ class Agent:
 
     def get_action(self, state) -> Action:
         action_probs = self.get_action_probs(state)
-        action = np.random.choice(np.arange(len(action_probs)), p=action_probs)
+        action = np.random.multinomial(len(action_probs), action_probs).argmax()
         return Action(action)
 
     def learn(self, next_state, reward, state, action):

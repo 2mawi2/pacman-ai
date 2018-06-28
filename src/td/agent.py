@@ -15,26 +15,34 @@ class Agent:
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
         self.N = defaultdict(lambda: 0)
-        self.choices = np.array([0, 1, 2, 3])
         self.state_map = defaultdict(lambda: set())
+        self.learning = True
 
     def get_random_action(self, game: Game) -> Action:
         actions: [Action] = game.get_valid_actions()
         return Action(np.random.choice([i.value for i in actions]))
 
     def learn(self, next_state, reward, state):
+        if not self.learning:
+            return
+
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
-        alpha = 1 / (self.N[state] + 1)
-        self.V[state] = self.V[state] + alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
+        self.alpha = 1 / (self.N[state] + 1)
+        self.V[state] = self.V[state] + self.alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
         self.N[state] += 1
 
     def get_valid_states(self, all_states: dict, current_state: int) -> []:
         state_hashes = self.state_map[current_state]
         return [all_states[i] for i in state_hashes]
 
+    def calc_boltzmann(self, state_a, other_states):
+        temperature = 0.1
+
+        return np.exp(np.true_divide(state_a, temperature)) / \
+               np.sum([np.exp(np.true_divide(i, temperature)) for i in other_states])
+
     def get_greedy_state(self, game: Game, all_states_list: dict) -> (object, int, bool):
-        self.epsilon *= self.epsilon_decay
         if (1 - self.epsilon) < np.random.rand():  # get random state
             return self._get_random_state(game)
         else:
@@ -43,21 +51,20 @@ class Agent:
 
             if len(valid_states) < 1:
                 return self._get_random_state(game)
+            Vs = np.array([self.V[hash(s.tostring())] for s in valid_states])
+            best_state_idx = Vs.argmax()
+            probabilities = np.ones(len(valid_states), dtype=float) * self.epsilon / len(valid_states)
+            probabilities[best_state_idx] += (1.0 - self.epsilon)
+            selected_state_idx = np.random.multinomial(len(probabilities), probabilities).argmax()
 
-            Vs = [self.V[hash(s.tostring())] for s in valid_states]
-            best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
-
-            reward, done = game.move_to_state(best_state)
-
-            return best_state, reward, done
+            reward, done = game.move_to_state(valid_states[selected_state_idx])
+            return valid_states[best_state_idx], reward, done
 
     def _get_random_state(self, game: Game) -> (object, int, bool):
-        # we should probably not get the same state again as next state
         action = self.get_random_action(game)
         state_before_random_move = game.get_field_state()
         reward, done, _ = game.move2(action)
         state = game.get_field_state()
-        assert not np.array_equal(state, state_before_random_move)
 
         self.state_map[hash(state_before_random_move.tostring())] \
             .add(hash(state.tostring()))

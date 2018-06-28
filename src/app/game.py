@@ -17,7 +17,8 @@ value_to_fieldtype = {
     "g": FieldType.GHOST,
     "x": FieldType.STAR,
     "d": FieldType.DOOR,
-    "W": FieldType.WALL
+    "W": FieldType.WALL,
+    " ": FieldType.EMPTY
 }
 
 
@@ -31,6 +32,7 @@ class Game:
             ["o", "W", "o", "o", "W", "W", "g", "W", "o", "o", "W", "o"],
             ["o", "o", "o", "o", "o", "o", "o", "W", "W", "W", "W", "d"],
         ])
+        y, x = np.where(self.field == "p")
 
     def update_ui(self):
         for line in self.field:
@@ -98,16 +100,15 @@ class Game:
         return delta_x, delta_y
 
     def get_field_type(self, x, y) -> FieldType:
-        if y + 1 > len(self.field) or y < 0 or x + 1 > len(self.field[0]) or x < 0:
+        if y >= 6 or y < 0 or x >= 12 or x < 0:
             return FieldType.WALL
-        return value_to_fieldtype.get(self.field[y, x][0], FieldType.EMPTY)
+        return value_to_fieldtype[self.field[y, x][0]]
 
     def get_state(self):
         return hash(self.field.tostring())  # hash game_field for unique state id
 
     def get_field_state(self):
         return np.copy(self.field)
-
 
         # if s.tostring() == self.field.tostring():
         #    return False
@@ -144,7 +145,6 @@ class Game:
 
     def move_to_state(self, next_state) -> (int, bool):
         reward, done = self.get_reward_for_next_state(next_state)
-
         self.field = np.copy(next_state)
         return reward, done
 

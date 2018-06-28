@@ -102,7 +102,7 @@ def iterate_lambda_epsilon():
 if __name__ == '__main__':
     #iterate_lambda_epsilon()
     q_learning(
-       num_episodes=5000,
+       num_episodes=10000,
        gamma=1,
        alpha=1,
        epsilon=0.5,
