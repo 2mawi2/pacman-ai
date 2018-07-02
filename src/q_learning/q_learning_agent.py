@@ -24,9 +24,10 @@ class Agent:
         action = np.random.multinomial(len(action_probs), action_probs).argmax()
         return Action(action)
 
-    def learn(self, next_state, reward, state, action):
+    def learn(self, next_state, reward, state, action) -> float:
         best_next_action = np.argmax(self.Q[next_state])
         td_target = reward + self.gamma * self.Q[next_state][best_next_action]
         td_delta = td_target - self.Q[state][action.value]
         self.Q[state][action.value] = self.Q[state][action.value] + self.alpha * td_delta
         self.epsilon *= (1 - self.epsilon_decay)
+        return td_delta

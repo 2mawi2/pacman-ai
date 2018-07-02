@@ -25,14 +25,16 @@ class Agent:
         state = hash(state.tostring())  # overwrite with hashcode
         next_state = hash(next_state.tostring())  # overwrite with hashcode
         alpha = 1 / (self.N[state] + 1)
-        self.V[state] = self.V[state] + alpha * (reward + self.gamma * self.V[next_state] - self.V[state])
+        td_delta = (reward + self.gamma * self.V[next_state] - self.V[state])
+        self.V[state] = self.V[state] + alpha * td_delta
         self.N[state] += 1
+        return td_delta
 
-    def get_valid_states(self, all_states: dict, current_state: int) -> [np.multiarray]:
+    def get_valid_states(self, all_states: dict, current_state: int) -> [object]:
         state_hashes = self.state_map[current_state]
         return [all_states[i] for i in state_hashes]
 
-    def get_greedy_state_and_move(self, game: Game, all_states_list: dict) -> (np.multiarray, int, bool):
+    def get_greedy_state_and_move(self, game: Game, all_states_list: dict) -> (object, int, bool):
         self.epsilon *= self.epsilon_decay
         if (1 - self.epsilon) < np.random.rand():  # get random state
             return self._get_random_state(game)
@@ -49,7 +51,7 @@ class Agent:
             reward, done = game.move_to_state(best_state)
             return best_state, reward, done
 
-    def _get_random_state(self, game: Game) -> (np.multiarray, int, bool):
+    def _get_random_state(self, game: Game) -> (object, int, bool):
         action = self.get_random_action(game)
         state_before_random_move = game.get_field_state()
         reward, done, _ = game.move2(action)

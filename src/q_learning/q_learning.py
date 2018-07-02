@@ -13,13 +13,14 @@ class Statistics:
     mean_average: [float] = []
     avg_reward: [float] = 0
     max_reward: [int] = 0
+    td_delta: [float] = []
 
 
 statistics = Statistics()
 
 
-def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0.001, alpha_decay=0.0):
-    agent = Agent(gamma, alpha, epsilon, epsilon_decay, alpha_decay)
+def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0.001):
+    agent = Agent(gamma, alpha, epsilon, epsilon_decay)
 
     for i_episode in range(num_episodes):
         path = []
@@ -34,25 +35,31 @@ def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0
             reward, done, next_state = game.move2(action)
             # game.update_ui()
 
-            agent.learn(next_state, reward, state, action)
+            td_delta = agent.learn(next_state, reward, state, action)
 
             path.append(action)
             total_reward += reward
 
-            if total_reward > statistics.max_reward:
-                statistics.max_reward = total_reward
-                statistics.ideal_path = path
-
             if done:
                 if i_episode > num_episodes - 100:
                     agent.epsilon = 0
-                statistics.avg_reward += total_reward
-                statistics.x.append(i_episode)
-                statistics.y.append(total_reward)
-                statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
                 print(f"episode: {i_episode} finished with reward: {total_reward}")
 
+            collect_stats(done, i_episode, path, total_reward, td_delta)
+
             state = next_state
+
+
+def collect_stats(done, i_episode, path, total_reward, td_delta):
+    if done:
+        if total_reward > statistics.max_reward:
+            statistics.max_reward = total_reward
+            statistics.ideal_path = path
+        statistics.avg_reward += total_reward
+        statistics.x.append(i_episode)
+        statistics.y.append(total_reward)
+        statistics.td_delta.append(td_delta)
+        statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
 
 
 def print_best_solution():
@@ -65,10 +72,12 @@ def print_best_solution():
 
 def plot_data():
     plotly.tools.set_credentials_file(username='2mawi2', api_key='AylpnmyLc4ghzSemcCwM')
-    xy_data = go.Scatter(x=statistics.x, y=statistics.y, mode='markers', marker=dict(size=4), name='AAPL')
+    xy_data = go.Scatter(x=statistics.x, y=statistics.y, mode='markers', marker=dict(size=4), name='reward')
     mov_avg = go.Scatter(x=statistics.x[5:-4], y=statistics.mean_average[5:-4],
                          line=dict(width=2, color='red'), name='Moving average')
-    data = [xy_data, mov_avg]
+    td_error = go.Scatter(x=statistics.x, y=statistics.td_delta,
+                          line=dict(width=2, color='blue'), name='td error')
+    data = [xy_data, mov_avg, td_error]
     try:
         plotly.plotly.iplot(data, filename='results')
     except:
@@ -77,7 +86,7 @@ def plot_data():
 
 if __name__ == '__main__':
     q_learning(
-        num_episodes=5000,
+        num_episodes=10000,
         gamma=1,
         alpha=1,
         epsilon=0.5,
