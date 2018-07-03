@@ -75,9 +75,7 @@ def plot_data():
     xy_data = go.Scatter(x=statistics.x, y=statistics.y, mode='markers', marker=dict(size=4), name='reward')
     mov_avg = go.Scatter(x=statistics.x[5:-4], y=statistics.mean_average[5:-4],
                          line=dict(width=2, color='red'), name='Moving average')
-    td_error = go.Scatter(x=statistics.x, y=statistics.td_delta,
-                          line=dict(width=2, color='blue'), name='td error')
-    data = [xy_data, mov_avg, td_error]
+    data = [xy_data, mov_avg]
     try:
         plotly.plotly.iplot(data, filename='results')
     except:
@@ -86,7 +84,7 @@ def plot_data():
 
 if __name__ == '__main__':
     q_learning(
-        num_episodes=10000,
+        num_episodes=1000,
         gamma=1,
         alpha=1,
         epsilon=0.5,

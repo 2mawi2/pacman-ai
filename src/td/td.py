@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import plotly.graph_objs as go
 import plotly
 from src.app.game import Game
@@ -28,28 +30,37 @@ def td_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.5, epsilon_decay=
         total_reward = 0
         done = False
 
+        visited_states = defaultdict(lambda: 0)
+        random_count = 0
+        visited_states[hash(state.tostring())] += 1
         while not done:
-            next_state, reward, done = agent.get_greedy_state_and_move(game, all_collected_states)
-            #game.update_ui()
+            next_state, reward, done, is_random = agent.get_greedy_state_and_move(game, all_collected_states,
+                                                                                  visited_states)
+            if is_random:
+                random_count += 1
+            # game.update_ui()
             next_state_hash = hash(next_state.tostring())
+
+            visited_states[next_state_hash] += 1
 
             if next_state_hash not in all_collected_states:
                 all_collected_states[next_state_hash] = next_state
 
             total_reward += reward
-            td_delta = agent.learn(next_state, reward, state)  # update V
+            agent.learn(next_state, reward, state)
             state = next_state
 
-            collect_stats(done, i_episode, num_episodes, total_reward, td_delta)
+            collect_stats(done, i_episode, num_episodes, total_reward)
 
             if done:
+                # agent.epsilon = agent.epsilon - (1 / num_episodes)
                 if i_episode > num_episodes - 100:
                     agent.epsilon = 0
-                print(f"episode: {i_episode} finished with reward: {total_reward}")
+                print(f"episode: {i_episode} finished with reward: {total_reward}, random moves: {random_count}")
     return agent
 
 
-def collect_stats(done, i_episode, num_episodes, total_reward, td_delta):
+def collect_stats(done, i_episode, num_episodes, total_reward):
     if done:
         if total_reward > statistics.max_reward:
             statistics.max_reward = total_reward
@@ -57,7 +68,6 @@ def collect_stats(done, i_episode, num_episodes, total_reward, td_delta):
             statistics.avg_reward += total_reward
         statistics.x.append(i_episode)
         statistics.y.append(total_reward)
-        statistics.td_delta.append(td_delta)
         statistics.mean_average.append(statistics.avg_reward / (i_episode + 1))
 
 
@@ -66,9 +76,7 @@ def plot_data():
     xy_data = go.Scatter(x=statistics.x, y=statistics.y, mode='markers', marker=dict(size=4), name='reward')
     mov_avg = go.Scatter(x=statistics.x[5:-4], y=statistics.mean_average[5:-4],
                          line=dict(width=2, color='red'), name='Moving average')
-    td_delta = go.Scatter(x=statistics.x[5:-4], y=statistics.td_delta[5:-4],
-                          line=dict(width=2, color='blue'), name='td error')
-    data = [xy_data, mov_avg, td_delta]
+    data = [xy_data, mov_avg]
     try:
         plotly.plotly.iplot(data, filename='results')
     except:
@@ -93,10 +101,10 @@ def evaluate_policy_greedy(agent: Agent):
 
 if __name__ == '__main__':
     agent = td_learning(
-        num_episodes=100000,
+        num_episodes=200_000,
         gamma=1,
         epsilon=1,
-        epsilon_decay=0.999999
+        epsilon_decay=0.9999995
     )
     evaluate_policy_greedy(agent)
     plot_data()

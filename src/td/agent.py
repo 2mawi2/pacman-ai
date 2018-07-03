@@ -22,34 +22,39 @@ class Agent:
         return Action(np.random.choice([i.value for i in actions]))
 
     def learn(self, next_state, reward, state) -> None:
-        state = hash(state.tostring())  # overwrite with hashcode
-        next_state = hash(next_state.tostring())  # overwrite with hashcode
+        state = hash(state.tostring())
+        next_state = hash(next_state.tostring())
         alpha = 1 / (self.N[state] + 1)
-        td_delta = (reward + self.gamma * self.V[next_state] - self.V[state])
+        td_target = reward + self.gamma * self.V[next_state]
+        td_delta = (td_target - self.V[state])
         self.V[state] = self.V[state] + alpha * td_delta
         self.N[state] += 1
-        return td_delta
 
     def get_valid_states(self, all_states: dict, current_state: int) -> [object]:
         state_hashes = self.state_map[current_state]
         return [all_states[i] for i in state_hashes]
 
-    def get_greedy_state_and_move(self, game: Game, all_states_list: dict) -> (object, int, bool):
+    def get_greedy_state_and_move(self, game: Game, all_states_list: dict, states: dict) -> (object, int, bool):
         self.epsilon *= self.epsilon_decay
         if (1 - self.epsilon) < np.random.rand():  # get random state
-            return self._get_random_state(game)
+            random_state, reward, done = self._get_random_state(game)
+            return random_state, reward, done, True
         else:
             current_state = game.get_state()
             valid_states = self.get_valid_states(all_states_list, current_state)
 
             if len(valid_states) < 1:
-                return self._get_random_state(game)
-
+                random_state, reward, done = self._get_random_state(game)
+                return random_state, reward, done, True
             Vs = [self.V[hash(s.tostring())] for s in valid_states]
             best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
+            best_state_hash = hash(best_state.tostring())
+            if states[best_state_hash] > 0:
+                random_state, reward, done = self._get_random_state(game)
+                return random_state, reward, done, True
 
             reward, done = game.move_to_state(best_state)
-            return best_state, reward, done
+            return best_state, reward, done, False
 
     def _get_random_state(self, game: Game) -> (object, int, bool):
         action = self.get_random_action(game)
