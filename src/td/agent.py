@@ -24,34 +24,30 @@ class Agent:
     def learn(self, next_state, reward, state) -> None:
         state = hash(state.tostring())
         next_state = hash(next_state.tostring())
-        alpha = 1 / (self.N[state] + 1)
+        self.alpha = 1 / (self.N[state] + 1)
         td_target = reward + self.gamma * self.V[next_state]
         td_delta = (td_target - self.V[state])
-        self.V[state] = self.V[state] + alpha * td_delta
+        self.V[state] = self.V[state] + self.alpha * td_delta
         self.N[state] += 1
 
-    def get_valid_states(self, all_states: dict, current_state: int) -> [object]:
-        state_hashes = self.state_map[current_state]
-        return [all_states[i] for i in state_hashes]
+    def get_action_probs(self, Vs):
+        probabilities = np.ones(4, dtype=float) * self.epsilon / 4
+        best_action = np.argmax(Vs)
+        probabilities[best_action] += (1.0 - self.epsilon)
+        return probabilities
 
-    def get_greedy_state_and_move(self, game: Game, all_states_list: dict, states: dict) -> (object, int, bool):
+    def get_greedy_state_and_move(self, game: Game, all_states_list: dict, already_visited: dict):
         self.epsilon *= self.epsilon_decay
         if (1 - self.epsilon) < np.random.rand():  # get random state
-            random_state, reward, done = self._get_random_state(game)
-            return random_state, reward, done, True
+            return self._get_random_state(game)
         else:
-            current_state = game.get_state()
-            valid_states = self.get_valid_states(all_states_list, current_state)
-
-            if len(valid_states) < 1:
-                random_state, reward, done = self._get_random_state(game)
-                return random_state, reward, done, True
+            valid_states = game.get_valid_states()
             Vs = [self.V[hash(s.tostring())] for s in valid_states]
             best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
+
             best_state_hash = hash(best_state.tostring())
-            if states[best_state_hash] > 0:
-                random_state, reward, done = self._get_random_state(game)
-                return random_state, reward, done, True
+            # if already_visited[best_state_hash] > 0:
+            #   return self._get_random_state(game)
 
             reward, done = game.move_to_state(best_state)
             return best_state, reward, done, False
@@ -62,4 +58,4 @@ class Agent:
         reward, done, _ = game.move2(action)
         state = game.get_field_state()
         self.state_map[hash(state_before_random_move.tostring())].add(hash(state.tostring()))
-        return game.get_field_state(), reward, done
+        return game.get_field_state(), reward, done, True

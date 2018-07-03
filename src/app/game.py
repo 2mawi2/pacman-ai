@@ -137,3 +137,16 @@ class Game:
             if field_type is not FieldType.WALL:
                 valid_actions.append(d)
         return valid_actions
+
+    def get_valid_states(self):
+        valid_states = []
+        for d in Action:
+            delta_x, delta_y = self._get_delta(d)
+            x, y = self.find_pacman()
+            field_type: FieldType = self.get_field_type(x + delta_x, y + delta_y)
+            if field_type is not FieldType.WALL:
+                valid_state = self.field.copy()
+                valid_state[y, x] = " "
+                valid_state[y + delta_y, x + delta_x] = "p"
+                valid_states.append(valid_state)
+        return valid_states
