@@ -2,6 +2,7 @@ from collections.__init__ import defaultdict
 
 import numpy as np
 from src.app.action import Action
+from src.app.fieldtype import FieldType
 from src.app.game import Game
 
 
@@ -30,11 +31,18 @@ class Agent:
         self.V[state] = self.V[state] + self.alpha * td_delta
         self.N[state] += 1
 
-    def get_action_probs(self, Vs):
-        probabilities = np.ones(4, dtype=float) * self.epsilon / 4
-        best_action = np.argmax(Vs)
-        probabilities[best_action] += (1.0 - self.epsilon)
-        return probabilities
+    def get_v_states(self, valid_states, game):
+        v_states = []
+        for s in valid_states:
+            y, x = np.where(s == "p")
+            field_type = game.get_field_type(x, y)
+            if field_type == FieldType.GHOST:
+                v_states.append(-100)
+            elif field_type == FieldType.STAR:
+                v_states.append(10)
+            else:
+                v_states.append(self.V[hash(s.tostring())])
+        return v_states
 
     def get_greedy_state_and_move(self, game: Game, all_states_list: dict, already_visited: dict):
         self.epsilon *= self.epsilon_decay
@@ -42,12 +50,14 @@ class Agent:
             return self._get_random_state(game)
         else:
             valid_states = game.get_valid_states()
-            Vs = [self.V[hash(s.tostring())] for s in valid_states]
-            best_state = max(zip(valid_states, Vs), key=lambda i: i[1])[0]
 
-            best_state_hash = hash(best_state.tostring())
-            # if already_visited[best_state_hash] > 0:
-            #   return self._get_random_state(game)
+            v_states = self.get_v_states(valid_states, game)
+            best_state = valid_states[v_states.index(max(v_states))]
+
+            if already_visited[hash(best_state.tostring())] > 1:
+                valid_states = list(filter(lambda s: hash(s.tostring()) == hash(best_state.tostring()), valid_states))
+                v_states = self.get_v_states(valid_states, game)
+                best_state = valid_states[v_states.index(max(v_states))]
 
             reward, done = game.move_to_state(best_state)
             return best_state, reward, done, False

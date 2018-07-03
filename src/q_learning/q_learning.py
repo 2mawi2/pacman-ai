@@ -84,7 +84,7 @@ def plot_data():
 
 if __name__ == '__main__':
     q_learning(
-        num_episodes=1000,
+        num_episodes=10_000,
         gamma=1,
         alpha=1,
         epsilon=0.5,

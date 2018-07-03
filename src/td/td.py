@@ -20,7 +20,7 @@ statistics = Statistics()
 all_collected_states = {}
 
 
-def td_learning(num_episodes, gamma=0.99, alpha=1, epsilon=0.5, epsilon_decay=0.009):
+def td_learning(num_episodes, gamma=0.99, alpha=1.0, epsilon=0.5, epsilon_decay=0.009):
     agent = Agent(gamma, alpha, epsilon, epsilon_decay)
 
     for i_episode in range(num_episodes):
@@ -53,6 +53,9 @@ def td_learning(num_episodes, gamma=0.99, alpha=1, epsilon=0.5, epsilon_decay=0.
 
             collect_stats(done, i_episode, num_episodes, total_reward)
 
+            if i_episode > num_episodes - 2: # print last episode
+                game.update_ui()
+
             if done:
                 # agent.epsilon = agent.epsilon - (1 / num_episodes)
                 if i_episode > num_episodes - 100:
@@ -84,28 +87,11 @@ def plot_data():
         pass
 
 
-def evaluate_policy_greedy(agent: Agent):
-    game = Game()
-
-    total_reward = 0
-    done = False
-
-    while not done:
-        valid_states = game.get_valid_states()
-        probs = [agent.V[hash(s.tostring())] for s in valid_states]
-        best_next_state = max(zip(valid_states, probs), key=lambda i: i[1])[0]
-        reward, done = game.move_to_state(best_next_state)
-        game.update_ui()
-        total_reward += reward
-
-
 if __name__ == '__main__':
     agent = td_learning(
-        num_episodes=1_000,
+        num_episodes=5000,
         gamma=1,
-        alpha=1,
-        epsilon=1,
+        epsilon=0.5,
         epsilon_decay=1
     )
-    evaluate_policy_greedy(agent)
     plot_data()
