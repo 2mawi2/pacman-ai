@@ -4,18 +4,7 @@ import plotly.graph_objs as go
 import plotly
 from src.app.game import Game
 from src.td.agent import Agent
-
-
-class Statistics:
-    x: [int] = []
-    y: [int] = []
-    mean_average: [float] = []
-    avg_reward: [float] = 0
-    max_reward: [int] = 0
-    td_delta: [float] = []
-    alpha: [float] = []
-    epsilon: [float] = []
-
+from src.app.statistics import Statistics
 
 statistics = Statistics()
 

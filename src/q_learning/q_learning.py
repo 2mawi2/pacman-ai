@@ -3,17 +3,8 @@ import plotly.graph_objs as go
 import plotly
 from src.app.action import Action
 from src.app.game import Game
+from src.app.statistics import Statistics
 from src.q_learning.q_learning_agent import Agent
-
-
-class Statistics:
-    ideal_path: [Action] = []
-    x: [int] = []
-    y: [int] = []
-    mean_average: [float] = []
-    avg_reward: [float] = 0
-    max_reward: [int] = 0
-    td_delta: [float] = []
 
 
 statistics = Statistics()
@@ -84,7 +75,7 @@ def plot_data():
 
 if __name__ == '__main__':
     q_learning(
-        num_episodes=10_000,
+        num_episodes=5_000,
         gamma=1,
         alpha=1,
         epsilon=0.5,
