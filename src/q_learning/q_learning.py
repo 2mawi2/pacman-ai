@@ -6,7 +6,6 @@ from src.app.game import Game
 from src.app.statistics import Statistics
 from src.q_learning.q_learning_agent import Agent
 
-
 statistics = Statistics()
 
 
@@ -32,9 +31,10 @@ def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0
             total_reward += reward
 
             if done:
+                agent.epsilon = agent.epsilon * 0.1 ** (1 / num_episodes)
                 if i_episode > num_episodes - 100:
                     agent.epsilon = 0
-                print(f"episode: {i_episode} finished with reward: {total_reward}")
+                print(f"episode: {i_episode} finished with reward: {total_reward} epsilon: {agent.epsilon}")
 
             collect_stats(done, i_episode, path, total_reward, td_delta)
 
@@ -78,8 +78,8 @@ if __name__ == '__main__':
         num_episodes=5_000,
         gamma=1,
         alpha=1,
-        epsilon=0.5,
+        epsilon=1,
         epsilon_decay=0,
     )
     print_best_solution()
-    plot_data()
+    #plot_data()
