@@ -25,7 +25,7 @@ class Agent:
     def learn(self, next_state, reward, state) -> None:
         state = hash(state.tostring())
         next_state = hash(next_state.tostring())
-        self.alpha = 1 / (self.N[state] + 1)
+        #self.alpha = 1 / (self.N[state] + 1)
         td_target = reward + self.gamma * self.V[next_state]
         td_delta = (td_target - self.V[state])
         self.V[state] = self.V[state] + self.alpha * td_delta
@@ -42,7 +42,7 @@ class Agent:
     def get_greedy_state(self, already_visited, game):
         valid_states = game.get_valid_states()
         best_state = self.find_state_max_v(game, valid_states)
-        best_state = self.remove_states_visited_twice(already_visited, best_state, game, valid_states)
+        #best_state = self.remove_states_visited_twice(already_visited, best_state, game, valid_states)
         return best_state
 
     def remove_states_visited_twice(self, already_visited, best_state, game, valid_states):
