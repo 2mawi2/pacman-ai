@@ -11,7 +11,7 @@ class Agent:
         self.gamma = gamma
         self.V = defaultdict(lambda: 0)
 
-    def learn(self, next_state, reward, state) -> None:
+    def learn(self, next_state, reward, state):
         state = hash(state.tostring())
         next_state = hash(next_state.tostring())
         td_target = reward + self.gamma * self.V[next_state]

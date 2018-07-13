@@ -22,9 +22,10 @@ def td_learning(num_episodes, gamma, alpha):
         while not done:
             next_state = agent.get_greedy_state(game)
             reward, done = game.move_to_state(next_state)
-            # game.update_ui()
-            total_reward += reward
             agent.learn(next_state, reward, state)
+
+            #game.update_ui()
+            total_reward += reward
             state = next_state
             collect_stats(done, i_episode, total_reward)
 
@@ -50,4 +51,3 @@ if __name__ == '__main__':
         gamma=0.83,
         alpha=1
     )
-    # plot_utils.plot_data(statistics)

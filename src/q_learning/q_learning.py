@@ -31,7 +31,7 @@ def q_learning(num_episodes, gamma=0.99, alpha=0.5, epsilon=0.1, epsilon_decay=0
             total_reward += reward
 
             if done:
-                agent.epsilon = agent.epsilon * 0.1 ** (1 / num_episodes)
+                agent.epsilon = agent.epsilon * 0.01 ** (1 / num_episodes)
                 if i_episode > num_episodes - 100:
                     agent.epsilon = 0
                 print(f"episode: {i_episode} finished with reward: {total_reward} epsilon: {agent.epsilon}")
