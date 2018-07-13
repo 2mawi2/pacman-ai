@@ -146,9 +146,9 @@ class TestGame(TestCase):
         self.assertEqual(first_state, second_state)
 
     def test_get_state_field(self):
-        state_field_result = self.game.get_state_field()
+        state_field_result = self.game.get_field_state()
         self.game.move(Action.UP)
-        state2_field_result = self.game.get_state_field()
+        state2_field_result = self.game.get_field_state()
         self.assertFalse(np.array_equal(state_field_result, state2_field_result))
 
     def test_get_valid_states_returns_a_valid_state(self):
@@ -312,3 +312,7 @@ class TestGame(TestCase):
         ])
         with self.assertRaises(ValueError):
             self.game.move_to_state(invalid_state)
+
+    def test_get_valid_random_actions(self):
+        result = self.game.get_valid_actions()
+        self.assertEquals([Action.LEFT, Action.UP], result)

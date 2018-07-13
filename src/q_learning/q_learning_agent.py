@@ -1,13 +1,11 @@
 from collections.__init__ import defaultdict
 
 import numpy as np
-
 from src.app.action import Action
 
 
 class Agent:
-    def __init__(self, gamma, alpha, epsilon, epsilon_decay, alpha_decay):
-        self.alpha_decay = alpha_decay
+    def __init__(self, gamma, alpha, epsilon, epsilon_decay):
         self.epsilon_decay = epsilon_decay
         self.epsilon = epsilon
         self.alpha = alpha
@@ -23,14 +21,13 @@ class Agent:
 
     def get_action(self, state) -> Action:
         action_probs = self.get_action_probs(state)
-        action = np.random.choice(np.arange(len(action_probs)), p=action_probs)
+        action = np.random.multinomial(len(action_probs), action_probs).argmax()
         return Action(action)
 
-    def learn(self, next_state, reward, state, action):
+    def learn(self, next_state, reward, state, action) -> float:
         best_next_action = np.argmax(self.Q[next_state])
         td_target = reward + self.gamma * self.Q[next_state][best_next_action]
         td_delta = td_target - self.Q[state][action.value]
         self.Q[state][action.value] = self.Q[state][action.value] + self.alpha * td_delta
-
         self.epsilon *= (1 - self.epsilon_decay)
-        self.alpha *= (1 - self.alpha_decay)
+        return td_delta
